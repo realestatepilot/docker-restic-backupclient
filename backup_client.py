@@ -75,7 +75,7 @@ def run_backup():
 		log.info('Repository initialized.')
 	except subprocess.CalledProcessError as e:
 		output=e.output.decode()
-		if 'repository master key and config already initialized' in output:
+		if 'repository master key and config already initialized' in output or 'config file already exists' in output:
 			log.info('Repository was already initialized.')
 		else:
 			log.error('Initializing repository failed: %s'%output)
