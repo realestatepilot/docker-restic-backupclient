@@ -146,7 +146,7 @@ def schedule_backup(crontab):
 				break
 			time.sleep(10)
 		try:
-			run()
+			run_backup()
 		except:
 			log.exception("Something went unexpectedly wrong!")
 
