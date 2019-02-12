@@ -9,7 +9,8 @@ RUN \
     pip3 install crontab && \
     # install elasticdump \
     apk add --update --no-cache npm && \
-    npm install -g elasticdump
+    npm install -g elasticdump && \
+	apk add --update --no-cache mariadb-client gzip
 
 ENV BACKUP_ROOT=/backup
 

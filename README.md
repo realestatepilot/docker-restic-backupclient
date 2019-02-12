@@ -14,6 +14,7 @@
 * /backup is an anonymous volume
 * if you want to backup other files, just mount the volumes to /backup/something
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
+* Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
 
 ## Command and Arguments
 
@@ -54,6 +55,18 @@ elasticdump:
   password: s3cr3t
   exclude:
     - ^.kibana
+
+# Perform a dump of mysql
+# * host is required
+# * port defaults to 3306
+# * username and password are required
+# * either include or exclude can be set to a list of regular expressions to include/exclude databases
+mysqldump:
+  host: database.local
+  username: root
+  password: s3cr3t
+  exclude:
+    - ^test
 
 ```
 
