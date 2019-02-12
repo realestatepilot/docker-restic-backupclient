@@ -106,7 +106,7 @@ def run_backup():
 		subprocess.check_call([
 			'restic',
 			'backup',
-			'--hostname',get_env('RESTIC_HOSTNAME'),
+			'--hostname',get_env('BACKUP_HOSTNAME'),
 			backup_root
 			],stderr=subprocess.STDOUT)
 		log.info('Backup finished.')
@@ -165,7 +165,7 @@ def main():
 
 	get_env('RESTIC_REPOSITORY')
 	get_env('RESTIC_PASSWORD')
-	get_env('RESTIC_HOSTNAME')
+	get_env('BACKUP_HOSTNAME')
 	get_env('BACKUP_ROOT')
 
 	if args.cmd=='run':
