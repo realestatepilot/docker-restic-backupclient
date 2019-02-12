@@ -106,7 +106,7 @@ def run_backup():
 		subprocess.check_call([
 			'restic',
 			'backup',
-			'--hostname',get_env('BACKUP_HOSTNAME'),
+			'--host',get_env('BACKUP_HOSTNAME'),
 			backup_root
 			],stderr=subprocess.STDOUT)
 		log.info('Backup finished.')
