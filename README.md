@@ -26,6 +26,7 @@
 
 * RESTIC_REPOSITORY (required): repository to backup to
 * RESTIC_PASSWORD (required): password to encrypt the backups
+* BACKUP_HOSTNAME (required): A hostname to use for backups
 * BACKUP_CONFIG (optional): path to a yaml file containing advanced backup options
 * restic specific env vars (optional): e.g. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 
