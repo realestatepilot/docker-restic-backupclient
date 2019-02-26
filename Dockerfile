@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.9
 
 RUN \
     # install restic \
@@ -10,7 +10,9 @@ RUN \
     # install elasticdump \
     apk add --update --no-cache npm && \
     npm install -g elasticdump && \
-	apk add --update --no-cache mariadb-client gzip
+	apk add --update --no-cache mariadb-client gzip && \
+    # install mongodump \
+    apk add --update --no-cache mongodb-tools
 
 ENV BACKUP_ROOT=/backup
 

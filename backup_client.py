@@ -12,6 +12,7 @@ import yaml
 import shutil
 import elasticdump
 import mysqldump
+import mongodump
 
 def fail(msg,args):
 	log.error(msg,args)
@@ -116,6 +117,22 @@ def run_backup():
 		mysqldump_ok=mysqldump.mysql_dump_with_config(mysqldump_dir,config['mysqldump'])
 		if not mysqldump_ok:
 			log.error('Mysqldump failed. Backup canceled.')
+			return False
+
+	if 'mongodump' in config:
+		mongodump_dir=os.path.join(backup_root,'mongodump')
+		try:
+			shutil.rmtree(mongodump_dir)
+		except:
+			pass
+		if os.path.exists(mongodump_dir):
+			log.error('Unable to delete old mongodump dir at %s'%mongodump_dir)
+		os.mkdir(mongodump_dir)
+
+		log.info('Running mongodump to %s'%mongodump_dir)
+		mongodump_ok=mongodump.mongodump_with_config(mongodump_dir,config['mongodump'])
+		if not mongodump_ok:
+			log.error('Mongodump failed. Backup canceled.')
 			return False
 
 	log.info('Starting backup')

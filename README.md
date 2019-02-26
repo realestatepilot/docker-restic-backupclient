@@ -7,6 +7,8 @@
 * schedule backups to restic once or periodically
 * delete old backups
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
+* dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
+* dump mongodb prior to run a backup
 
 ## Volumes
 
@@ -15,6 +17,7 @@
 * if you want to backup other files, just mount the volumes to /backup/something
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
+* Mongodump will write to /backup/mongodump. This folder is deleted and re-created before each backup run
 
 ## Command and Arguments
 
@@ -67,6 +70,15 @@ mysqldump:
   password: s3cr3t
   exclude:
     - ^test
+
+# Perform a dump of mongodb
+# * host is required
+# * port defaults to 27017
+# * username and password are required
+mongodump:
+  host: mongodb.local
+  username: root
+  password: s3cr3t
 
 ```
 
