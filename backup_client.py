@@ -138,6 +138,8 @@ def run_backup():
 	log.info('Starting backup')
 	try:
 		subprocess.check_call([
+			'nice','-n19',
+			'ionice','-c3',
 			'restic',
 			'backup',
 			'--host',get_env('BACKUP_HOSTNAME'),
