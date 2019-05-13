@@ -165,6 +165,8 @@ def run_backup():
 		if not keep_is_valid:
 			log.warn('Keep configuration is invalid - not deleting old backups.')
 		else:
+			log.info('Unlocking repository')
+			subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
 			log.info('Deleting old backups')
 			try:
 				subprocess.check_call(cleanup_command,stderr=subprocess.STDOUT)
