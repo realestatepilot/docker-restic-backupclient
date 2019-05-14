@@ -6,6 +6,7 @@
 * config via env vars (basic config) and a simple yaml file (advanced config)
 * schedule backups to restic once or periodically
 * delete old backups
+* run pre-backup scripts, optionally fail on errors
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
@@ -47,6 +48,15 @@ keep:
   weekly: 4
   monthly: 3
   yearly: 1
+
+# Run some script(s) before backup
+pre-backup-scripts:
+  - description: Doing some pre-backup stuff
+    script: |
+      echo "x"
+      exit 1
+    fail-on-error: true
+
 
 # Perform a dump of elasticsearch
 # * url is required

@@ -64,6 +64,29 @@ def load_config():
 		log.exception('Unable to read config file %s'%config_file)
 		return None
 
+def run_pre_backup_script(scriptinfo):
+	if type(scriptinfo) is not dict:
+		log.error("Expected pre-backup-script to be a dict, got: %s",type(scriptinfo).__name__)
+		return False
+	if not 'script' in scriptinfo:
+		log.error("Pre-backup-script does not contain a 'script' property.")
+		return False
+
+	script=scriptinfo['script']
+	fail_on_error=bool(scriptinfo['fail-on-error']) if 'fail-on-error' in scriptinfo else True
+	description=("Executing pre-backup-script: %s"%scriptinfo['description']) if 'description' in scriptinfo else "Executing pre-backup-script"
+
+	log.info(description)
+	try:
+		subprocess.check_call(script,stderr=subprocess.STDOUT,shell=True)
+		log.info("Pre-backup-script succeeded")
+	except subprocess.CalledProcessError as e:
+		if (fail_on_error):
+			log.error("Pre-backup-script failed: %s",e)
+			return False
+		log.warning("Pre-backup-script failed: %s",e)
+
+	return True
 
 
 def run_backup():
@@ -86,6 +109,12 @@ def run_backup():
 	config=load_config()
 	if config is None:
 		return False
+
+	if 'pre-backup-scripts' in config:
+		for script in config['pre-backup-scripts']:
+			if not run_pre_backup_script(script):
+				log.error('Stopped due to pre-backup script failures')
+				return False
 
 	if 'elasticdump' in config:
 		elasticdump_dir=os.path.join(backup_root,'elasticdump')
