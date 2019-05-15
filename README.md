@@ -10,6 +10,7 @@
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
+* Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 
 ## Volumes
 
@@ -48,6 +49,14 @@ keep:
   weekly: 4
   monthly: 3
   yearly: 1
+
+# Caches are excluded by default. See http://bford.info/cachedir/spec.html on hot to mark a cache dir
+exclude-caches: false
+
+# Exclude some files from backup. See https://restic.readthedocs.io/en/latest/040_backup.html#including-and-excluding-files for details
+exclude:
+  - *.bak
+  - /tmp
 
 # Run some script(s) before backup
 pre-backup-scripts:

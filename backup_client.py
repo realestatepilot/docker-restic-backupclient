@@ -164,16 +164,34 @@ def run_backup():
 			log.error('Mongodump failed. Backup canceled.')
 			return False
 
+	cmd=[
+		'nice','-n19',
+		'ionice','-c3',
+		'restic',
+		'backup',
+		'--host',get_env('BACKUP_HOSTNAME'),
+	]
+
+	# exclude caches (http://bford.info/cachedir/spec.html)
+	if not ('exclude-caches' in config and bool(config['exclude-caches'])):
+		cmd.append('--exclude-caches')
+
+	# exclude other files
+	if 'exclude' in config:
+		excludes=config['exclude']
+		if type(excludes) is not list:
+			excludes=[excludes]
+		for exclude in excludes:
+			log.info("Excluding: %s"%exclude)
+		cmd.append('--exclude')
+		cmd.append(exclude)
+
+	cmd.append(backup_root)
+
 	log.info('Starting backup')
 	try:
-		subprocess.check_call([
-			'nice','-n19',
-			'ionice','-c3',
-			'restic',
-			'backup',
-			'--host',get_env('BACKUP_HOSTNAME'),
-			backup_root
-			],stderr=subprocess.STDOUT)
+		subprocess.check_call(cmd,stderr=subprocess.STDOUT)
+		
 		log.info('Backup finished.')
 	except subprocess.CalledProcessError as e:
 			log.info('Backup failed.')
