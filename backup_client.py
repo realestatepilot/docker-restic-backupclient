@@ -183,8 +183,8 @@ def run_backup():
 			excludes=[excludes]
 		for exclude in excludes:
 			log.info("Excluding: %s"%exclude)
-		cmd.append('--exclude')
-		cmd.append(exclude)
+			cmd.append('--exclude')
+			cmd.append(exclude)
 
 	cmd.append(backup_root)
 
