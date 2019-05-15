@@ -56,7 +56,7 @@ exclude-caches: false
 # Exclude some files from backup. See https://restic.readthedocs.io/en/latest/040_backup.html#including-and-excluding-files for details
 exclude:
   - *.bak
-  - /tmp
+  - .cache/*
 
 # Run some script(s) before backup
 pre-backup-scripts:
