@@ -1,2 +1,5 @@
 __pycache__
 backup.yaml
+backup.lock
+backup.log
+backup.sh
