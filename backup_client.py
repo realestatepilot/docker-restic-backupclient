@@ -176,6 +176,10 @@ def run_backup():
 	if not ('exclude-caches' in config and bool(config['exclude-caches'])):
 		cmd.append('--exclude-caches')
 
+	# ignore inode for changed-file checks (default is true)
+	if not ('ignore-inode' in config and bool(config['ignore-inode'])):
+		cmd.append('--ignore-inode')
+
 	# exclude other files
 	if 'exclude' in config:
 		excludes=config['exclude']

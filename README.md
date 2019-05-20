@@ -66,6 +66,9 @@ pre-backup-scripts:
       exit 1
     fail-on-error: true
 
+# File changed are by default done by mtime and size, inode changes are ignored.
+# set ignore-inode to false to thread files as changed if the inode is changed
+ignore-inode: false
 
 # Perform a dump of elasticsearch
 # * url is required

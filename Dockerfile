@@ -2,7 +2,7 @@ FROM alpine:3.9
 
 RUN \
     # install restic \
-    wget -O- https://github.com/restic/restic/releases/download/v0.9.4/restic_0.9.4_linux_amd64.bz2 | bzip2 -d > /usr/local/bin/restic && \
+    wget -O- https://github.com/restic/restic/releases/download/v0.9.5/restic_0.9.5_linux_amd64.bz2 | bzip2 -d > /usr/local/bin/restic && \
     chmod 0755 /usr/local/bin/restic && \
     # install python \
     apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml && \
