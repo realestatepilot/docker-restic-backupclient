@@ -12,7 +12,8 @@ RUN \
     npm install -g elasticdump && \
 	apk add --update --no-cache mariadb-client gzip && \
     # install mongodump \
-    apk add --update --no-cache mongodb-tools
+    apk add --update --no-cache mongodb-tools && \
+    apk add --update --no-cache findutils
 
 ENV BACKUP_ROOT=/backup
 
