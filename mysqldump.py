@@ -5,6 +5,7 @@ import requests
 from requests.utils import requote_uri
 import os.path
 import subprocess
+import re
 
 def mysql_list_database(host,port,username,password):
 
