@@ -15,9 +15,8 @@ def mysql_list_database(host,port,username,password):
 			'mysqlshow',
 			'--host=%s'%host,
 			'--port=%s'%port,
-			'--user=%s'%username,
-			'--password=%s'%password
-			]).decode()
+			'--user=%s'%username
+			],env={'MYSQL_PWD': password}).decode()
 	except subprocess.CalledProcessError as e:
 		log.error('Mysqlshow failed.')
 		return None
@@ -92,14 +91,13 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--host=%s '%host,
 				'--port=%s '%port,
 				'--user=%s '%username,
-				'--password=%s '%password,
 				'--single-transaction ',
 				'--no-data ',
 				'--add-drop-database ',
 				'--no-create-info ',
 				'--databases %s '%database,
 				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DROP_CREATE.sql.gz'%(database))
-				]),shell=True)
+				]),env={'MYSQL_PWD': password},shell=True)
 			log.info('Mysql: Dumping DATA for %s'%(database))
 			subprocess.check_call("".join([
 				'nice -n 19 '
@@ -108,12 +106,11 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--host=%s '%host,
 				'--port=%s '%port,
 				'--user=%s '%username,
-				'--password=%s '%password,
 				'--single-transaction ',
 				'--no-create-db ',
 				database,
 				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DATA.sql.gz'%(database))
-				]),shell=True)
+				]),env={'MYSQL_PWD': password},shell=True)
 		except subprocess.CalledProcessError as e:
 			log.error('Mysqldump failed.')
 			return False
