@@ -1,0 +1,60 @@
+# if set, old backups will be deleted according to the rules below.
+# At least one of [last, daily, weekly, monthly, yearly] needs to be set to make this work
+keep:
+  last: 1
+  daily: 7
+  weekly: 4
+  monthly: 3
+  yearly: 1
+
+# Caches are excluded by default. See http://bford.info/cachedir/spec.html on hot to mark a cache dir
+exclude-caches: false
+
+# Exclude some files from backup. See https://restic.readthedocs.io/en/latest/040_backup.html#including-and-excluding-files for details
+exclude:
+  - "*.bak"
+  - ".cache/*"
+
+# Run some script(s) before backup
+# pre-backup-scripts:
+#   - description: Doing some pre-backup stuff
+#     script: |
+#       echo "x"
+#       exit 1
+#     fail-on-error: true
+
+# File changed are by default done by mtime and size, inode changes are ignored.
+# set ignore-inode to false to thread files as changed if the inode is changed
+ignore-inode: false
+
+# Perform a dump of elasticsearch
+# * url is required
+# * username and password for basic auth are optional
+# * either include or exclude can be set to a list of regular expressions to include/exclude indices
+# elasticdump:
+#   url: https://es.local:9200/
+#   username: esuser
+#   password: s3cr3t
+#   exclude:
+#     - ^.kibana
+
+# Perform a dump of mysql
+# * host is required
+# * port defaults to 3306
+# * username and password are required
+# * either include or exclude can be set to a list of regular expressions to include/exclude databases
+mysqldump:
+  host: mysql
+  username: root
+  password: s3cr3t
+  exclude:
+    - ^test
+
+# Perform a dump of mongodb
+# * host is required
+# * port defaults to 27017
+# * username and password are required
+# mongodump:
+#   host: mongodb.local
+#   username: root
+#   password: s3cr3t

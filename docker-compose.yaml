@@ -1,0 +1,25 @@
+# Demo / Template of how to integrate restic backup into docker compose deployment
+--- 
+version: '3'
+services:
+  mysql:
+    image: mariadb:10.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: demo
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demo
+      MYSQL_ROOT_PASSWORD: s3cr3t
+    # volumes:
+    #   - ./data/mysql:/var/lib/mysql
+  restic:
+    image: evermind/restic-backupclient:latest
+    environment:
+      RESTIC_REPOSITORY: s3:https://my.s3compatiblevendor.tls/bucketpath
+      RESTIC_PASSWORD: resticSecret
+      BACKUP_HOSTNAME: resticHostname
+      AWS_ACCESS_KEY_ID: S3AccessKey
+      AWS_SECRET_ACCESS_KEY: S3Secret
+      BACKUP_CONFIG: /scripts/config.yaml
+    volumes:
+      - ./config.yaml:/scripts/config.yaml

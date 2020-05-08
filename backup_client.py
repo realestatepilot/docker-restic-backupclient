@@ -110,6 +110,10 @@ def run_backup():
 	if config is None:
 		return False
 
+	if not (os.path.exists(backup_root)):
+		log.info('Backup mount point not found %s. Creating internal mount point for dump jobs. This might be ok if you only backup database dumps.'%backup_root)
+		os.mkdir(backup_root)
+
 	if 'pre-backup-scripts' in config:
 		for script in config['pre-backup-scripts']:
 			if not run_pre_backup_script(script):
