@@ -17,6 +17,8 @@ RUN \
 
 ENV BACKUP_ROOT=/backup
 
+VOLUME /backup
+
 ADD *.py /scripts/
 
 CMD /scripts/backup_client.py schedule @daily
