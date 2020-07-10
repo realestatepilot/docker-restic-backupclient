@@ -3,3 +3,4 @@ backup.yaml
 backup.lock
 backup.log
 backup.sh
+/data/**
