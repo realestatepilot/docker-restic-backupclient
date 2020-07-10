@@ -43,6 +43,21 @@ def mssql_list_database(host,port,username,password):
 
 	return result
 
+def mssql_dump_with_config(target_dir,config):
+	if not 'host' in config:
+		log.error('Missing mysql config: host')
+	if not 'username' in config:
+		log.error('Missing mysql config: username')
+	if not 'password' in config:
+		log.error('Missing mysql config: password')
+	host=config['host']
+	username=config['username']
+	password=config['password']
+	port=config['port'] if 'port' in config else 1433
+	include_patterns=config['include'] if 'include' in config else None
+	exclude_patterns=config['exclude'] if 'exclude' in config else None
+	return mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns)
+
 def mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns):
 	if include_patterns and exclude_patterns:
 		log.error("Either inclusion or exclusion of indices is allowed, not both!")
@@ -75,9 +90,10 @@ def mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				log.info('MSSQL: database %s is not excluded for this dump.'%database)
 		try:
 
-
 			log.info('MSSQL: Backup database statements for %s'%(database))
-			target_file=os.path.join(target_dir,'%s.bak'%(database))
+			# hard coded backup dir on mssql server -> mount this outside sql server container
+			target_file=os.path.join(os.path.sep,"backup",'%s.bak'%(database))
+
 			sql_cmd="""USE %s;
 				GO
 				BACKUP DATABASE %s

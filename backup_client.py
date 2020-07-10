@@ -93,19 +93,19 @@ def run_pre_backup_script(scriptinfo):
 def run_backup():
 	backup_root=get_env('BACKUP_ROOT')
 	log.info('Initializing repository')
-	# try:
-	# 	subprocess.check_output([
-	# 		'restic',
-	# 		'init'
-	# 		],stderr=subprocess.STDOUT)
-	# 	log.info('Repository initialized.')
-	# except subprocess.CalledProcessError as e:
-	# 	output=e.output.decode()
-	# 	if 'repository master key and config already initialized' in output or 'config file already exists' in output:
-	# 		log.info('Repository was already initialized.')
-	# 	else:
-	# 		log.error('Initializing repository failed: %s'%output)
-	# 		return False
+	try:
+		subprocess.check_output([
+			'restic',
+			'init'
+			],stderr=subprocess.STDOUT)
+		log.info('Repository initialized.')
+	except subprocess.CalledProcessError as e:
+		output=e.output.decode()
+		if 'repository master key and config already initialized' in output or 'config file already exists' in output:
+			log.info('Repository was already initialized.')
+		else:
+			log.error('Initializing repository failed: %s'%output)
+			return False
 
 	config=load_config()
 	if config is None:
@@ -173,11 +173,14 @@ def run_backup():
 		mssqldump_dir=os.path.join(backup_root,'mssqldump')
 		try:
 			# backup dir fpr mssql is a mount point. so delete every content but not dir itself
-			for root, dirs, files in os.walk(backup_root):
-					for f in files:
-							os.unlink(os.path.join(root, f))
-					for d in dirs:
-							shutil.rmtree(os.path.join(root, d))
+			for root, dirs, files in os.walk(mssqldump_dir, topdown=False):
+				for f in files:
+					os.unlink(os.path.join(root, f))
+				for d in dirs:
+					if backup_root!=os.path.join(root, d):
+						log.info("del dir %s"%os.path.join(root, d))
+						log.info("backup target %s"%mssqldump_dir)
+						shutil.rmtree(os.path.join(root, d))
 		except:
 			log.error('Unable to delete old mssqldump dir at %s'%mysqldump_dir)
 			return False

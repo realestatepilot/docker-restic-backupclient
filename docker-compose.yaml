@@ -2,16 +2,6 @@
 --- 
 version: '3'
 services:
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2019-CU5-ubuntu-18.04
-    expose:
-    - "1433"
-    environment:
-      ACCEPT_EULA: "true"
-      MSSQL_SA_PASSWORD: "s3cr3t!!"
-    volumes:
-      - ./data/mssql:/var/opt/mssql
-      - ./data/mssql_backup:/backup
   mysql:
     image: mariadb:10.4
     restart: unless-stopped
@@ -22,13 +12,21 @@ services:
       MYSQL_ROOT_PASSWORD: s3cr3t
     # volumes:
     #   - ./data/mysql:/var/lib/mysql
+
+  # # mssql example
+  # mssql:
+  #   image: mcr.microsoft.com/mssql/server:2019-CU5-ubuntu-18.04
+  #   expose:
+  #   - "1433"
+  #   environment:
+  #     ACCEPT_EULA: "true"
+  #     MSSQL_SA_PASSWORD: "s3cr3t!!"
+  #   volumes:
+  #     - ./data/mssql:/var/opt/mssql
+  #     - ./data/mssql_backup:/backup
+
   restic:
-    # image: evermind/restic-backupclient:latest
-    build: 
-      context: ./
-      # dockerfile: Dockerfile
-    image: restic-backupclient:latest
-      
+    image: evermind/restic-backupclient:latest
     environment:
       RESTIC_REPOSITORY: s3:https://my.s3compatiblevendor.tls/bucketpath
       RESTIC_PASSWORD: resticSecret
@@ -39,5 +37,4 @@ services:
     volumes:
       - ./config.yaml:/scripts/config.yaml
       # in case of mssql
-      - ./data/mssql_backup:/backup/mssqldump
-      - ./:/scripts
+      # - ./data/mssql_backup:/backup/mssqldump/

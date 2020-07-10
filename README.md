@@ -21,7 +21,9 @@
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
 * Mongodump will write to /backup/mongodump. This folder is deleted and re-created before each backup run
-* MSSQL can only dump inside server container. Mount the backup target dir to host path and at restic container to /backup/mssqldump manually.
+* MSSQL can only dump inside server container.
+  * backup inside MSSQL Server is written to /backup
+  * Mount the backup target dir to host path and at restic container to /backup/mssqldump manually. See example in docker-compose.yaml.
 
 ## Command and Arguments
 
