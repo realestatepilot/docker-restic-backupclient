@@ -11,11 +11,17 @@ SQLCMDPATH='/opt/mssql-tools/bin/sqlcmd'
 
 def mssql_list_database(host,port,username,password):
 
+    # TODO: Login timeout via args?
 	try:
 		log.info('Getting list of databases')
 
-		output=subprocess.check_output(SQLCMDPATH+ ' -S %s,%s -U %s -Q "SELECT name FROM sys.databases;"'%(host,port,username),
-			shell=True,
+		output=subprocess.check_output([
+				SQLCMDPATH,
+				'-l','1',
+				'-S','%s,%s'%(host,port),
+				'-U',username,
+				'-Q','SELECT name FROM sys.databases;'
+			],
 			env={'SQLCMDPASSWORD': password}
 			).decode()
 		log.debug(output)
@@ -84,8 +90,12 @@ def mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 			"""%(database, database, target_file)
 			log.debug('MSSQL: Backup database statements for %s'%(sql_cmd))
 
-			output=subprocess.check_output(SQLCMDPATH+ ' -S %s,%s -U %s -Q "%s"'%(host,port,username,sql_cmd),
-				shell=True,
+			output=subprocess.check_output([
+				SQLCMDPATH,
+				'-S','%s,%s'%(host,port),
+				'-U',username,
+				'-Q',sql_cmd
+				],
 				env={'SQLCMDPASSWORD': password}
 				).decode()
 			log.info(output)
