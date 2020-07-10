@@ -10,6 +10,7 @@
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
+* dump MSSQL prior to run a backup (with option to include/exclude databases via regular expressions) to server local path
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 
 ## Volumes
@@ -20,6 +21,7 @@
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
 * Mongodump will write to /backup/mongodump. This folder is deleted and re-created before each backup run
+* MSSQL can only dump inside server container. Mount the backup target dir to host path and at restic container to /backup/mssqldump manually.
 
 ## Command and Arguments
 
@@ -38,7 +40,7 @@
 
 ## Yaml configuration examples
 
-```
+```yaml
 ---
 
 # if set, old backups will be deleted according to the rules below.
@@ -102,5 +104,16 @@ mongodump:
   username: root
   password: s3cr3t
 
-```
 
+# Perform a dump of mssql
+# * host is required
+# * port defaults to 1433
+# * username and password are required
+mssqldump:
+  host: mssql.local
+  username: SA
+  password: s3cr3t!!
+  exclude:
+    - tempdb
+
+```

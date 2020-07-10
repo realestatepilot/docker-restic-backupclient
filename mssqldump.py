@@ -11,13 +11,12 @@ SQLCMDPATH='/opt/mssql-tools/bin/sqlcmd'
 
 def mssql_list_database(host,port,username,password):
 
-    # TODO: Login timeout via args?
 	try:
 		log.info('Getting list of databases')
 
 		output=subprocess.check_output([
 				SQLCMDPATH,
-				'-l','1',
+				'-l','2',
 				'-S','%s,%s'%(host,port),
 				'-U',username,
 				'-Q','SELECT name FROM sys.databases;'
@@ -93,6 +92,7 @@ def mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 			output=subprocess.check_output([
 				SQLCMDPATH,
 				'-S','%s,%s'%(host,port),
+				'-l','2',
 				'-U',username,
 				'-Q',sql_cmd
 				],
@@ -100,7 +100,7 @@ def mssql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				).decode()
 			log.info(output)
 		except subprocess.CalledProcessError as e:
-			log.error('Mysqldump failed.')
+			log.error('MSSQL Dump failed.')
 			return False
 	return True
 
@@ -124,10 +124,7 @@ def main():
 		print('No such directory: %s'%args.target_dir)
 		quit(1)
 
-# debug list databases
-	# ok=mssql_dump(args.target_dir,args.host,args.port,args.username,args.password,args.include,args.exclude)
 	ok=mssql_list_database(args.host,args.port,args.username,args.password)
-
 
 	ok=mssql_dump(args.target_dir,args.host,args.port,args.username,args.password,args.include,args.exclude)
 	if ok:
@@ -137,8 +134,6 @@ def main():
 		quit(1)
 
 
-
 if __name__ == '__main__':
 	log.basicConfig(level=log.INFO,format='%(asctime)s %(levelname)7s: %(message)s')
-
 	main()

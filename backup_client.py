@@ -13,6 +13,7 @@ import shutil
 import elasticdump
 import mysqldump
 import mongodump
+import mssqldump
 
 def fail(msg,args):
 	log.error(msg,args)
@@ -92,19 +93,19 @@ def run_pre_backup_script(scriptinfo):
 def run_backup():
 	backup_root=get_env('BACKUP_ROOT')
 	log.info('Initializing repository')
-	try:
-		subprocess.check_output([
-			'restic',
-			'init'
-			],stderr=subprocess.STDOUT)
-		log.info('Repository initialized.')
-	except subprocess.CalledProcessError as e:
-		output=e.output.decode()
-		if 'repository master key and config already initialized' in output or 'config file already exists' in output:
-			log.info('Repository was already initialized.')
-		else:
-			log.error('Initializing repository failed: %s'%output)
-			return False
+	# try:
+	# 	subprocess.check_output([
+	# 		'restic',
+	# 		'init'
+	# 		],stderr=subprocess.STDOUT)
+	# 	log.info('Repository initialized.')
+	# except subprocess.CalledProcessError as e:
+	# 	output=e.output.decode()
+	# 	if 'repository master key and config already initialized' in output or 'config file already exists' in output:
+	# 		log.info('Repository was already initialized.')
+	# 	else:
+	# 		log.error('Initializing repository failed: %s'%output)
+	# 		return False
 
 	config=load_config()
 	if config is None:
@@ -166,6 +167,25 @@ def run_backup():
 		mongodump_ok=mongodump.mongodump_with_config(mongodump_dir,config['mongodump'])
 		if not mongodump_ok:
 			log.error('Mongodump failed. Backup canceled.')
+			return False
+
+	if 'mssqldump' in config:
+		mssqldump_dir=os.path.join(backup_root,'mssqldump')
+		try:
+			# backup dir fpr mssql is a mount point. so delete every content but not dir itself
+			for root, dirs, files in os.walk(backup_root):
+					for f in files:
+							os.unlink(os.path.join(root, f))
+					for d in dirs:
+							shutil.rmtree(os.path.join(root, d))
+		except:
+			log.error('Unable to delete old mssqldump dir at %s'%mysqldump_dir)
+			return False
+
+		log.info('Running mssqldump to %s'%mssqldump_dir)
+		mssqldump_ok=mssqldump.mssql_dump_with_config(mssqldump_dir,config['mssqldump'])
+		if not mssqldump_ok:
+			log.error('MSSQL dump failed. Backup canceled.')
 			return False
 
 	cmd=[
