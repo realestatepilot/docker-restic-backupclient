@@ -20,6 +20,12 @@ add -o Acquire::Check-Valid-Until=false; to command if your system is too old. u
 pip3 install crontab
 ```
 
+alternative if you get errors, find out real name for pip3 an if you get URL errrors, give a hint to use ssl for that
+```
+pip-3.2 install --index-url=https://pypi.python.org/simple/ crontab
+```
+
+
 If you run backup_client.py now some help information should be shown.
 
 ## Shell-Script for running
