@@ -14,6 +14,7 @@ install modules for python
 ```
 $ apt-get install -y python3-pip  python3-yaml python3-requests
 ```
+add -o Acquire::Check-Valid-Until=false; to command if your system is too old. update it at next oppertunity
 
 ```
 pip3 install crontab
