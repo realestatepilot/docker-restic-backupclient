@@ -13,6 +13,7 @@ import shutil
 import elasticdump
 import mysqldump
 import mongodump
+import mssqldump
 
 def fail(msg,args):
 	log.error(msg,args)
@@ -166,6 +167,28 @@ def run_backup():
 		mongodump_ok=mongodump.mongodump_with_config(mongodump_dir,config['mongodump'])
 		if not mongodump_ok:
 			log.error('Mongodump failed. Backup canceled.')
+			return False
+
+	if 'mssqldump' in config:
+		mssqldump_dir=os.path.join(backup_root,'mssqldump')
+		try:
+			# backup dir fpr mssql is a mount point. so delete every content but not dir itself
+			for root, dirs, files in os.walk(mssqldump_dir, topdown=False):
+				for f in files:
+					os.unlink(os.path.join(root, f))
+				for d in dirs:
+					if backup_root!=os.path.join(root, d):
+						log.info("del dir %s"%os.path.join(root, d))
+						log.info("backup target %s"%mssqldump_dir)
+						shutil.rmtree(os.path.join(root, d))
+		except:
+			log.error('Unable to delete old mssqldump dir at %s'%mysqldump_dir)
+			return False
+
+		log.info('Running mssqldump to %s'%mssqldump_dir)
+		mssqldump_ok=mssqldump.mssql_dump_with_config(mssqldump_dir,config['mssqldump'])
+		if not mssqldump_ok:
+			log.error('MSSQL dump failed. Backup canceled.')
 			return False
 
 	cmd=[

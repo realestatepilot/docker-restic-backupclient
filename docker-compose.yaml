@@ -12,6 +12,19 @@ services:
       MYSQL_ROOT_PASSWORD: s3cr3t
     # volumes:
     #   - ./data/mysql:/var/lib/mysql
+
+  # # mssql example
+  # mssql:
+  #   image: mcr.microsoft.com/mssql/server:2019-CU5-ubuntu-18.04
+  #   expose:
+  #   - "1433"
+  #   environment:
+  #     ACCEPT_EULA: "true"
+  #     MSSQL_SA_PASSWORD: "s3cr3t!!"
+  #   volumes:
+  #     - ./data/mssql:/var/opt/mssql
+  #     - ./data/mssql_backup:/backup
+
   restic:
     image: evermind/restic-backupclient:latest
     environment:
@@ -23,3 +36,5 @@ services:
       BACKUP_CONFIG: /scripts/config.yaml
     volumes:
       - ./config.yaml:/scripts/config.yaml
+      # in case of mssql
+      # - ./data/mssql_backup:/backup/mssqldump/
