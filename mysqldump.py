@@ -50,9 +50,10 @@ def mysql_dump_with_config(target_dir,config):
 	port=config['port'] if 'port' in config else 3306
 	include_patterns=config['include'] if 'include' in config else None
 	exclude_patterns=config['exclude'] if 'exclude' in config else None
-	return mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns)
+	mysqldump_extra_args=config['mysqldump-extra-args'] if 'mysqldump_extra_args' in config else []
+	return mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns,mysqldump_extra_args)
 
-def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns):
+def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns,mysqldump_extra_args):
 	if include_patterns and exclude_patterns:
 		log.error("Either inclusion or exclusion of indices is allowed, not both!")
 	databases=mysql_list_database(host,port,username,password)
@@ -91,12 +92,12 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--host=%s '%host,
 				'--port=%s '%port,
 				'--user=%s '%username,
-				'--single-transaction ',
 				'--no-data ',
 				'--add-drop-database ',
 				'--no-create-info ',
+				' '.join(mysqldump_extra_args),
 				'--databases %s '%database,
-				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DROP_CREATE.sql.gz'%(database))
+				' | nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DROP_CREATE.sql.gz'%(database))
 				]),env={'MYSQL_PWD': password},shell=True)
 			log.info('Mysql: Dumping DATA for %s'%(database))
 			subprocess.check_call("".join([
@@ -106,8 +107,8 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--host=%s '%host,
 				'--port=%s '%port,
 				'--user=%s '%username,
-				'--single-transaction ',
 				'--no-create-db ',
+				' '.join(mysqldump_extra_args),
 				database,
 				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DATA.sql.gz'%(database))
 				]),env={'MYSQL_PWD': password},shell=True)
@@ -135,7 +136,7 @@ def main():
 		print('No such directory: %s'%args.target_dir)
 		quit(1)
 
-	ok=mysql_dump(args.target_dir,args.host,args.port,args.username,args.password,args.include,args.exclude)
+	ok=mysql_dump(args.target_dir,args.host,args.port,args.username,args.password,args.include,args.exclude,[])
 	if ok:
 		print('Dump successfully created.')
 	else:

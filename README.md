@@ -92,6 +92,9 @@ mysqldump:
   password: s3cr3t
   exclude:
     - ^test
+  mysqldump-extra-args:
+    - --skip-lock-tables
+    - --single-transaction
 
 # Perform a dump of mongodb
 # * host is required

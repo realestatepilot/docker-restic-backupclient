@@ -49,6 +49,8 @@ mysqldump:
   password: s3cr3t
   exclude:
     - ^test
+  mysqldump-extra-args:
+    - --lock-tables=false
 
 # Perform a dump of mongodb
 # * host is required
