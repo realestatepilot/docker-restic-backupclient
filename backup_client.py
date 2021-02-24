@@ -12,6 +12,7 @@ import yaml
 import shutil
 import elasticdump
 import mysqldump
+import pgdump
 import mongodump
 import influxdump
 
@@ -151,6 +152,22 @@ def run_backup():
 		mysqldump_ok=mysqldump.mysql_dump_with_config(mysqldump_dir,config['mysqldump'])
 		if not mysqldump_ok:
 			log.error('Mysqldump failed. Backup canceled.')
+			return False
+
+	if 'pgdump' in config:
+		pgdump_dir=os.path.join(backup_root,'pgdump')
+		try:
+			shutil.rmtree(pgdump_dir)
+		except:
+			pass
+		if os.path.exists(pgdump_dir):
+			log.error('Unable to delete old pgdump dir at %s'%pgdump_dir)
+		os.mkdir(pgdump_dir)
+
+		log.info('Running pgdump to %s'%pgdump_dir)
+		pgdump_ok=pgdump.pg_dump_with_config(pgdump_dir,config['pgdump'])
+		if not pgdump_ok:
+			log.error('Pgdump failed. Backup canceled.')
 			return False
 
 	if 'mongodump' in config:

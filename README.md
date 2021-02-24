@@ -9,6 +9,7 @@
 * run pre-backup scripts, optionally fail on errors
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
+* dump postgresql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
 * dump influxdb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
@@ -20,7 +21,9 @@
 * if you want to backup other files, just mount the volumes to /backup/something
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
+* Pgdump will write to /backup/pgdump. This folder is deleted and re-created before each backup run
 * Mongodump will write to /backup/mongodump. This folder is deleted and re-created before each backup run
+* Influxdump will write to /backup/influxdump. This folder is deleted and re-created before each backup run
 
 ## Command and Arguments
 
@@ -96,6 +99,18 @@ mysqldump:
   mysqldump-extra-args:
     - --skip-lock-tables
     - --single-transaction
+
+# Perform a dump of postgresql
+# * host is required
+# * port defaults to 5432
+# * username and password are required
+# * either include or exclude can be set to a list of regular expressions to include/exclude databases
+pgdump:
+  host: database.local
+  username: root
+  password: s3cr3t
+  exclude:
+    - ^test
 
 # Perform a dump of mongodb
 # * host is required

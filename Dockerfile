@@ -3,18 +3,20 @@ FROM alpine:3.13
 RUN \
     # install restic \
     apk add --update --no-cache restic bash restic-bash-completion && \
-    # install python \
-    apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml && \
+    # install python and tools \
+    apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml gzip findutils && \
     pip3 install crontab && \
     # install elasticdump \
     apk add --update --no-cache npm && \
     npm install -g elasticdump && \
-	apk add --update --no-cache mariadb-client gzip && \
+    # install mysql client
+	apk add --update --no-cache mariadb-client  && \
+    # install postgresql client
+	apk add --update --no-cache postgresql-client && \
     # install mongodump \
     apk add --update --no-cache mongodb-tools && \
     # install influxdb \
-    apk add --update --no-cache influxdb && \
-    apk add --update --no-cache findutils
+    apk add --update --no-cache influxdb
 
 ENV BACKUP_ROOT=/backup
 
