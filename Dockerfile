@@ -12,6 +12,8 @@ RUN \
 	apk add --update --no-cache mariadb-client gzip && \
     # install mongodump \
     apk add --update --no-cache mongodb-tools && \
+    # install influxdb \
+    apk add --update --no-cache influxdb && \
     apk add --update --no-cache findutils
 
 ENV BACKUP_ROOT=/backup

@@ -10,6 +10,7 @@
 * dump elasticsearch prior to run a backup (with option to include/exclude indices via regular expressions)
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
+* dump influxdb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 
 ## Volumes
@@ -104,6 +105,13 @@ mongodump:
   host: mongodb.local
   username: root
   password: s3cr3t
+
+# Perform a dump of influxdb
+# * host is required
+# * port defaults to 8088
+# * database is optional, without all databases are dumped
+influxdump:
+  host: influxdb.local
 
 ```
 
