@@ -2,7 +2,7 @@ FROM alpine:3.13
 
 RUN \
     # install restic \
-    apk add --update --no-cache restic bash restic-bash-completion && \
+    apk add --update --no-cache restic bash restic-bash-completion curl && \
     # install python and tools \
     apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml gzip findutils && \
     pip3 install crontab && \
