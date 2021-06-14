@@ -1,0 +1,49 @@
+# apply with 'helm upgrade -i restic -n infrastructure -f values.yaml .'
+---
+
+schedules:
+  - "@hourly"
+
+image:
+  repository: evermind/restic-backupclient
+  tag: "0.6.3"
+  
+# Required values:
+resticRepositoryUrl: <yourRepoUrl>
+s3Key: <yourS3PublicKey>
+
+# Required secrets are taken from a kubernetes secret, see secret.yaml
+
+#
+# configmap: name-of-a-configmap
+#            This map should contain a valid backup.yaml config. The "name-of-a-configmap" is parsed as HELM template, so placeholders are alowed
+#
+configmap: false # (currently at some charts there is configmap already set. it has to been disabled for overwriting values in this manner)
+config:          # Configuration by overriding defaults inside deployment or env-files
+  keep:
+    last: 5
+    daily: 3
+    weekly: 2
+  # elasticdump:
+  #   url: http://es-prod:9200
+  #   exclude:
+  #     - ^his_
+  #     - ^all_his
+
+volumes: # List of optional volumes - all values are parsed as template.
+  - name: data # the name is used as mount point directory name at /backup/{{ name }}
+    hostPath: /data
+
+
+# Optional Values
+
+restore: # writable Mount Point as restore destination
+  hostPath: /restore
+
+# dump elasticsearch data  before backup
+# data:
+#   backup.yaml: |
+#     elasticdump:
+#       url: http://{{ include "elasticsearch.fullname" . }}:9200
+#
+# see also further informations at https://github.com/evermind/docker-restic-backupclient

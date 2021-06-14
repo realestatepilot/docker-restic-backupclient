@@ -1,0 +1,100 @@
+---
+
+kind: Deployment
+{{ if .Capabilities.APIVersions.Has "apps/v1/DaemonSet" }}
+apiVersion: apps/v1
+{{ else }}
+apiVersion: extensions/v1beta1
+{{ end }}
+metadata:
+  name: {{ include "backup.name" . }}
+  labels:
+    app: {{ include "backup.name" . }}
+spec:
+  selector:
+    matchLabels:
+        app: {{ include "backup.name" . }}
+        name: {{ include "backup.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "backup.name" . }}
+        name: {{ include "backup.name" . }}
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        name: backup
+        command:
+        - /scripts/backup_client.py
+        - schedule
+{{ toYaml (required "schedules are required" .Values.schedules) | indent 8 }}
+        env:
+          - name: TZ
+            value: Europe/Berlin
+          - name: RESTIC_REPOSITORY
+            value: {{ required "resticRepositoryUrl is required" .Values.resticRepositoryUrl }}
+          - name: RESTIC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: restic
+                key: resticPassword 
+          - name: BACKUP_HOSTNAME
+            value: {{ .Release.Name }}-backup
+          - name: AWS_ACCESS_KEY_ID
+            value: {{ required "s3Key is required" .Values.s3Key }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom: 
+              secretKeyRef:
+                name: restic
+                key: s3Secret
+          - name: BACKUP_CONFIG
+            value: /config/backup.yaml
+        volumeMounts:
+          - name: backup
+            mountPath: /backup
+          - name: backup-config
+            mountPath: /config
+{{- $root := . -}}
+{{ range $i,$k := .Values.volumes }}
+          - name: backup-vol-{{ $i }}
+            mountPath: /backup/{{ tpl $k.name $root }}
+            readOnly: false
+{{ end }}
+{{if .Values.restore }}
+          - name: restore
+            mountPath: /restore
+{{ end }}
+      volumes:
+        - name: backup
+          emptyDir: {}
+        - name: backup-config
+          configMap:
+{{ if .Values.configmap }}
+            name: "{{ tpl .Values.configmap . }}"
+{{ else }}
+            name: {{ include "backup.name" . }}-config
+{{ end }}
+{{ range $i,$k := .Values.volumes }}
+        - name: backup-vol-{{ $i }}
+          hostPath:
+            path: "{{ tpl $k.hostPath $root }}"
+{{ end }}
+{{ if .Values.restore }}
+        - name: restore
+          hostPath:
+            path: {{ .Values.restore.hostPath }}
+{{ end }}
+{{- if or .Values.nodeSelectorRequired .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml (required "nodeSelector for backup" .Values.nodeSelector) | indent 8 }}
+{{ end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+  # strategy:
+  #   type: RollingUpdate
+  #   rollingUpdate:
+  #     maxUnavailable: 100%
