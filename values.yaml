@@ -1,4 +1,4 @@
-# apply with 'helm upgrade -i restic -n infrastructure -f values.yaml .'
+# apply with 'helm upgrade -i restic -n <your-namespace> -f values.yaml .'
 ---
 
 schedules:
