@@ -218,6 +218,12 @@ def run_backup():
 	if not ('ignore-inode' in config and bool(config['ignore-inode'])):
 		cmd.append('--ignore-inode')
 
+	# set cacheDir if not default one should be used
+	if ('cache-dir' in config ):
+		log.info("cache-dir is: "+config['cache-dir'])
+		cmd.append('--cache-dir')
+		cmd.append(config['cache-dir'])
+
 	# exclude other files
 	if 'exclude' in config:
 		excludes=config['exclude']

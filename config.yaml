@@ -15,6 +15,9 @@ exclude:
   - "*.bak"
   - ".cache/*"
 
+# define restic cache-dir
+# cache-dir: /otherCacheDir
+
 # Run some script(s) before backup
 # pre-backup-scripts:
 #   - description: Doing some pre-backup stuff

@@ -13,11 +13,13 @@
 * dump mongodb prior to run a backup
 * dump influxdb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
+* support restic cache-dir in advanced config
 
 ## Volumes
 
 * /etc/localtime from host should be mounted readonly to get the correct time zone
 * /backup is an anonymous volume
+* /restic-cache is writeable directory for cache if this config is set
 * if you want to backup other files, just mount the volumes to /backup/something
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
@@ -61,6 +63,10 @@ exclude-caches: false
 exclude:
   - *.bak
   - .cache/*
+
+# define restic cache-dir
+# dir has to match with container environment if used
+# cache-dir: /restic-cache
 
 # Run some script(s) before backup
 pre-backup-scripts:
