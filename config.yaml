@@ -46,14 +46,14 @@ ignore-inode: false
 # * port defaults to 3306
 # * username and password are required
 # * either include or exclude can be set to a list of regular expressions to include/exclude databases
-# mysqldump:
-#   host: mysql
-#   username: root
-#   password: s3cr3t
-#   exclude:
-#     - ^test
-#   mysqldump-extra-args:
-#     - --lock-tables=false
+mysqldump:
+  host: mysql
+  username: root
+  password: s3cr3t
+  exclude:
+    - ^test
+  mysqldump-extra-args:
+    - --lock-tables=false
 
 # Perform a dump of mongodb
 # * host is required
