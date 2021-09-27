@@ -13,7 +13,8 @@ services:
     # volumes:
     #   - ./data/mysql:/var/lib/mysql
   restic:
-    image: evermind/restic-backupclient:latest
+    build: . 
+    # image: evermind/restic-backupclient:latest
     environment:
       RESTIC_REPOSITORY: s3:https://my.s3compatiblevendor.tls/bucketpath
       RESTIC_PASSWORD: resticSecret

@@ -13,6 +13,7 @@
 * dump mongodb prior to run a backup
 * dump influxdb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
+* support restic cache-dir in advanced config
 
 ## Volumes
 
@@ -61,6 +62,9 @@ exclude-caches: false
 exclude:
   - *.bak
   - .cache/*
+
+# define restic cache-dir
+# cache-dir: /otherCacheDir
 
 # Run some script(s) before backup
 pre-backup-scripts:
