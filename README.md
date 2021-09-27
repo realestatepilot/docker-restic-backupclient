@@ -19,6 +19,7 @@
 
 * /etc/localtime from host should be mounted readonly to get the correct time zone
 * /backup is an anonymous volume
+* /restic-cache is writeable directory for cache if this config is set
 * if you want to backup other files, just mount the volumes to /backup/something
 * Elasticdump will write to /backup/elasticdump. This folder is deleted and re-created before each backup run
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
@@ -64,7 +65,8 @@ exclude:
   - .cache/*
 
 # define restic cache-dir
-# cache-dir: /otherCacheDir
+# dir has to match with container environment if used
+# cache-dir: /restic-cache
 
 # Run some script(s) before backup
 pre-backup-scripts:
