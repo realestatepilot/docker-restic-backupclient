@@ -64,6 +64,11 @@ exclude:
   - *.bak
   - .cache/*
 
+# Include files 
+# a file contains paths (with patterns) which to backup for
+include-from: 
+  - /tmp/backupset.txt
+
 # define restic cache-dir
 # dir has to match with container environment if used
 # cache-dir: /restic-cache

@@ -224,6 +224,16 @@ def run_backup():
 		cmd.append('--cache-dir')
 		cmd.append(config['cache-dir'])
 
+	# include files to backupset from given files
+	if 'include-from' in config:
+		includes=config['includes']
+		if type(includes) is not list:
+				includes=[includes]
+		for include in includes:
+			log.info("Use include from: %s"%include)
+			cmd.append('--files-from')
+			cmd.append(include)
+
 	# exclude other files
 	if 'exclude' in config:
 		excludes=config['exclude']

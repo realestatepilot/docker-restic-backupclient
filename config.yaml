@@ -10,6 +10,10 @@ keep:
 # Caches are excluded by default. See http://bford.info/cachedir/spec.html on hot to mark a cache dir
 exclude-caches: false
 
+# include files from file content. See https://restic.readthedocs.io/en/latest/040_backup.html#including-files
+include-from:
+  - "/tmp/backupset.txt"
+
 # Exclude some files from backup. See https://restic.readthedocs.io/en/latest/040_backup.html#including-and-excluding-files for details
 exclude:
   - "*.bak"
