@@ -226,7 +226,7 @@ def run_backup():
 
 	# include files to backupset from given files
 	if 'include-from' in config:
-		includes=config['includes']
+		includes=config['include-from']
 		if type(includes) is not list:
 				includes=[includes]
 		for include in includes:
