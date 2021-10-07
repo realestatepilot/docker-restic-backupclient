@@ -244,7 +244,9 @@ def run_backup():
 			cmd.append('--exclude')
 			cmd.append(exclude)
 
-	cmd.append(backup_root)
+	# if include is set no backuproot should given as argument
+	if 'include-from' not in config:
+		cmd.append(backup_root)
 
 	log.info('Starting backup')
 	try:
