@@ -66,6 +66,7 @@ exclude:
 
 # Include files 
 # a file contains paths (with patterns) which to backup for
+# if use include-from define ALL backup paths inside file. Also backup paths from database dumps!
 include-from: 
   - /tmp/backupset.txt
 
