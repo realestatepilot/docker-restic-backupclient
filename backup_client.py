@@ -257,13 +257,24 @@ def run_backup():
 			log.info('Backup failed.')
 			return False
 
+	clean_old_backups(config, True)
+
+def clean_old_backups(config=None, prune = False):
+
+	if config is None:
+		config=load_config()
+
+	if config is None:
+		return False
+
+	cleanup_command=[
+		'restic',
+		'forget',
+		'--prune'
+	]
+
 	if 'keep' in config:
 		keep=config['keep']
-		cleanup_command=[
-			'restic',
-			'forget',
-			'--prune'
-		]
 		keep_is_valid=False
 		for keep_type in ['last','hourly','daily','weekly','monthly','yearly']:
 			if keep_type in keep:
@@ -271,15 +282,26 @@ def run_backup():
 				cleanup_command+=['--keep-%s'%keep_type,str(keep[keep_type])]
 		if not keep_is_valid:
 			log.warn('Keep configuration is invalid - not deleting old backups.')
-		else:
-			log.info('Unlocking repository')
-			subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
-			log.info('Deleting old backups')
-			try:
-				subprocess.check_call(cleanup_command,stderr=subprocess.STDOUT)
-				log.info('Backup finished.')
-			except subprocess.CalledProcessError as e:
-				log.warn('Cleanup failed!')
+			return
+	else:
+		keep_is_valid=False
+		for keep_type in ['last','hourly','daily','weekly','monthly','yearly']:
+			keep_env='KEEP_%s' % (keep_type.upper())
+			if keep_env in environ:
+				keep_is_valid=True
+				cleanup_command+=['--keep-%s'%keep_type,str(environ[keep_env])]
+		if not keep_is_valid:
+			log.warn('Rotation not configured. Keeping backups forever.')
+			return
+
+	log.info('Unlocking repository')
+	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
+	log.info('Deleting old backups')
+	try:
+		subprocess.check_call(cleanup_command,stderr=subprocess.STDOUT)
+		log.info('Backup finished.')
+	except subprocess.CalledProcessError as e:
+		log.warn('Cleanup failed!')
 
 
 def schedule_backup(crontab):
@@ -301,7 +323,8 @@ def main():
 	parser = argparse.ArgumentParser(description='Perform backups with restic')
 	subparsers = parser.add_subparsers(help='sub-command help',dest='cmd')
 	subparsers.required = True
-	parser_run = subparsers.add_parser('run', help='Run a backup now.')
+	parser_run = subparsers.add_parser('run', help='Run a backup now and rotate afterwards.')
+	parser_run = subparsers.add_parser('rotate', help='Rotate backups now.')
 	parser_schedule = subparsers.add_parser('schedule', help='Schedule backups.')
 	parser_schedule.add_argument('cronexpression',nargs='+',action=ParseCronExpressions,
 		help='Time to schedule the backup (cron expression, see https://pypi.org/project/crontab/)')
@@ -315,6 +338,10 @@ def main():
 
 	if args.cmd=='run':
 		result=run_backup()
+		if not result:
+			quit(1)
+	if args.cmd=='rotate':
+		result=clean_old_backups(None, True)
 		if not result:
 			quit(1)
 	else:

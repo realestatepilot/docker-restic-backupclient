@@ -41,6 +41,7 @@
 * BACKUP_HOSTNAME (required): A hostname to use for backups
 * BACKUP_CONFIG (optional): path to a yaml file containing advanced backup options
 * restic specific env vars (optional): e.g. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+* Keep options (only have affect if there is no "keep" section in config: KEEP_LAST, KEEP_DAILY, ...
 
 ## Yaml configuration examples
 
