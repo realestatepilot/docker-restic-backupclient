@@ -90,9 +90,7 @@ def run_pre_backup_script(scriptinfo):
 
 	return True
 
-
-def run_backup():
-	backup_root=get_env('BACKUP_ROOT')
+def init_restic_repo():
 	log.info('Initializing repository')
 	try:
 		subprocess.check_output([
@@ -107,6 +105,10 @@ def run_backup():
 		else:
 			log.error('Initializing repository failed: %s'%output)
 			return False
+
+def run_backup():
+	backup_root=get_env('BACKUP_ROOT')
+	init_restic_repo()
 
 	config=load_config()
 	if config is None:
@@ -262,7 +264,9 @@ def run_backup():
 def clean_old_backups(config=None, prune = False):
 
 	if config is None:
+		# direct call, init first
 		config=load_config()
+		init_restic_repo()
 
 	if config is None:
 		return False
