@@ -8,6 +8,7 @@ from datetime import datetime,timedelta
 import time
 import subprocess
 import os.path
+import re
 import yaml
 import shutil
 import elasticdump
@@ -20,10 +21,24 @@ def fail(msg,args):
 	log.error(msg,args)
 	quit(1)
 
+def resolve_env_placeholders(template):
+	origTemplate = template
+	resolveDepth = 0
+	while resolveDepth < 10:
+		resolveDepth += 1
+		changed = False
+		for placeholder, key in re.findall('(\$\(([a-zA-Z0-9_-]+)\))', template):
+			if key in environ:
+				template = template.replace(placeholder, environ[key])
+				changed = True
+		if not changed:
+			break
+	return template
+
 UNDEFINED=object()
 def get_env(name,default=UNDEFINED):
 	if name in environ:
-		return environ[name]
+		return resolve_env_placeholders(environ[name])
 	if default != UNDEFINED:
 		return default
 

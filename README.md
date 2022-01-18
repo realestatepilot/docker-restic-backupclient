@@ -43,6 +43,10 @@
 * restic specific env vars (optional): e.g. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 * Keep options (only have affect if there is no "keep" section in config: KEEP_LAST, KEEP_DAILY, ...
 
+### Env var substitution
+
+Env vars may contain placeholders like `$(OTHER_ENV_VAR)` which will be resolved recusively up to 10 levels. If resolution is not possible, the placeholder would be kept.
+
 ## Yaml configuration examples
 
 ```
