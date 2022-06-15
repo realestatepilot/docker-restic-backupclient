@@ -78,7 +78,7 @@ def load_config():
 	try:
 		log.info('Using extra config from %s'%config_file)
 		with open(config_file,'r') as config:
-			return yaml.load(config)
+			return yaml.safe_load(config)
 	except:
 		log.exception('Unable to read config file %s'%config_file)
 		return None
