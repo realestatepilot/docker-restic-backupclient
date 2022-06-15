@@ -50,6 +50,8 @@ class ParseCronExpressions(argparse.Action):
 
 	def __call__(self, parser, namespace, values, option_string=None):
 		items=[]
+		if type(values) is str:
+			values=[values]
 		for value in values:
 			try:
 				items.append(CronTab(value))
@@ -121,9 +123,12 @@ def init_restic_repo():
 			log.error('Initializing repository failed: %s'%output)
 			return False
 
-def run_backup():
+def run_backup(prune=False):
 	backup_root=get_env('BACKUP_ROOT')
 	init_restic_repo()
+
+	log.info('Unlocking repository')
+	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
 
 	config=load_config()
 	if config is None:
@@ -274,9 +279,15 @@ def run_backup():
 			log.info('Backup failed.')
 			return False
 
-	clean_old_backups(config, True)
+	if not clean_old_backups(config):
+		return False
 
-def clean_old_backups(config=None, prune = False):
+	if prune:
+		return prune_repository()
+	
+	return True
+
+def clean_old_backups(config=None):
 
 	if config is None:
 		# direct call, init first
@@ -289,7 +300,6 @@ def clean_old_backups(config=None, prune = False):
 	cleanup_command=[
 		'restic',
 		'forget',
-		'--prune'
 	]
 
 	if 'keep' in config:
@@ -300,7 +310,7 @@ def clean_old_backups(config=None, prune = False):
 				keep_is_valid=True
 				cleanup_command+=['--keep-%s'%keep_type,str(keep[keep_type])]
 		if not keep_is_valid:
-			log.warn('Keep configuration is invalid - not deleting old backups.')
+			log.warning('Keep configuration is invalid - not deleting old backups.')
 			return
 	else:
 		keep_is_valid=False
@@ -310,7 +320,7 @@ def clean_old_backups(config=None, prune = False):
 				keep_is_valid=True
 				cleanup_command+=['--keep-%s'%keep_type,str(environ[keep_env])]
 		if not keep_is_valid:
-			log.warn('Rotation not configured. Keeping backups forever.')
+			log.warning('Rotation not configured. Keeping backups forever.')
 			return
 
 	log.info('Unlocking repository')
@@ -318,22 +328,95 @@ def clean_old_backups(config=None, prune = False):
 	log.info('Deleting old backups')
 	try:
 		subprocess.check_call(cleanup_command,stderr=subprocess.STDOUT)
-		log.info('Backup finished.')
+		log.info('Cleanup finished.')
 	except subprocess.CalledProcessError as e:
-		log.warn('Cleanup failed!')
+		log.warning('Cleanup failed!')
+		return False
+
+	return True
+
+def get_prune_timeout():
+	prune_timeout=get_env('RESTIC_PRUNE_TIMEOUT',UNDEFINED)
+	if (prune_timeout is None):
+		return none
+
+	# https://stackoverflow.com/a/4628148/1471588
+	regex = re.compile(r'^((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?$')
+	parts = regex.match(prune_timeout)
+	if not parts:
+		fail('Invalid RESTIC_PRUNE_TIMEOUT: %s',prune_timeout)
+		return None
+	parts = parts.groupdict()
+	time_params = {}
+	for name, param in parts.items():
+		if param:
+			time_params[name] = int(param)
+	prune_timeout=timedelta(**time_params)
+	if prune_timeout.total_seconds()<=0:
+		return None
+	return prune_timeout
+
+def prune_repository(config=None):
+	if config is None:
+		# direct call, init first
+		config=load_config()
+		init_restic_repo()
+
+	if config is None:
+		return False
+  
+	prune_timeout=get_prune_timeout()
+
+	prune_command=[
+		'restic',
+		'prune',
+		'-o','s3.list-objects-v1=true' # See https://github.com/restic/restic/issues/3761
+	]
+
+	log.info('Unlocking repository')
+	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
+
+	if prune_timeout is None:
+		log.info('Pruning repository')
+	else:
+		log.info('Pruning repository (timeout %s)'%get_env('RESTIC_PRUNE_TIMEOUT'))
+		prune_command=['timeout',str(prune_timeout.total_seconds())] + prune_command
+	try:
+		subprocess.check_call(prune_command,stderr=subprocess.STDOUT)
+		log.info('Prune finished.')
+	except subprocess.CalledProcessError as e:
+		log.warning('Prune failed!')
+		return False
+	
+	return True
 
 
-def schedule_backup(crontab):
+def schedule_backup(crontab,prunecron=None):
+	next_is_prune=False
 	while True:
 		next_schedule=get_next_schedule(crontab)
-		log.info('Scheduling next backup at %s'%next_schedule)
+		next_is_prune=False
+
+		if prunecron is not None:
+			next_prune=get_next_schedule(prunecron)
+			if next_prune < next_schedule:
+				next_schedule = next_prune
+				next_is_prune = True
+
+		if next_is_prune:
+			log.info('Scheduling next prune at %s'%next_schedule)
+		else:
+			log.info('Scheduling next backup at %s'%next_schedule)
 		while True:
 			now=datetime.now()
 			if now>=next_schedule:
 				break
 			time.sleep(10)
 		try:
-			run_backup()
+			if next_is_prune:
+				prune_repository()
+			else:
+				run_backup(prunecron is None)
 		except:
 			log.exception("Something went unexpectedly wrong!")
 
@@ -342,9 +425,12 @@ def main():
 	parser = argparse.ArgumentParser(description='Perform backups with restic')
 	subparsers = parser.add_subparsers(help='sub-command help',dest='cmd')
 	subparsers.required = True
-	parser_run = subparsers.add_parser('run', help='Run a backup now and rotate afterwards.')
+	parser_run = subparsers.add_parser('run', help='Run a backup now and rotate+prune afterwards.')
 	parser_run = subparsers.add_parser('rotate', help='Rotate backups now.')
+	parser_run = subparsers.add_parser('prune', help='Prune the repository now')
 	parser_schedule = subparsers.add_parser('schedule', help='Schedule backups.')
+	parser_schedule.add_argument('--prune',dest='prunecron',action=ParseCronExpressions,
+		help='Time to prune the backup (cron expression, see https://pypi.org/project/crontab/)')
 	parser_schedule.add_argument('cronexpression',nargs='+',action=ParseCronExpressions,
 		help='Time to schedule the backup (cron expression, see https://pypi.org/project/crontab/)')
 
@@ -354,17 +440,22 @@ def main():
 	get_env('RESTIC_PASSWORD')
 	get_env('BACKUP_HOSTNAME')
 	get_env('BACKUP_ROOT')
+	get_prune_timeout()
 
 	if args.cmd=='run':
-		result=run_backup()
+		result=run_backup(True)
 		if not result:
 			quit(1)
-	if args.cmd=='rotate':
-		result=clean_old_backups(None, True)
+	elif args.cmd=='rotate':
+		result=clean_old_backups(None)
+		if not result:
+			quit(1)
+	elif args.cmd=='prune':
+		result=prune_repository(None)
 		if not result:
 			quit(1)
 	else:
-		schedule_backup(args.cronexpression)
+		schedule_backup(args.cronexpression, args.prunecron)
 
 
 if __name__ == '__main__':

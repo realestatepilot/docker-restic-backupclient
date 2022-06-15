@@ -31,13 +31,28 @@
 
 * The default command is "/scripts/backup_client.py schedule @daily" which performs a backup every day at 00:00
 * Possible args are
-  * run - runs a backup immediatelly
-  * schedule - runs periodic backups. One or more cron expressions are required as further arguments
+  * `run` - runs a backup immediatelly, rotate and prune afterwards
+  * `rotate` - rotate a backup immediatelly
+  * `prune` - prune the repository immediatelly
+  * `schedule` - runs periodic backups. One or more cron expressions are required as further arguments (see https://pypi.org/project/crontab/)
+    * `--prune` - An optional cron expressions for pruning the repo. If set, pruning is scheduled separately and not ather the backup.
+      If a backup is running when the prune is scheduled, prune will be skipped and vice
+
+### Scheduling example 
+
+```
+/scripts/backup_client.py schedule --prune '0 23 00 * * SUN' '@daily'
+```
+
+This would schedule a backup every day at 00:00. On end of Sunday, a prune would be scheduled (if the previous backup is not runing anymore). If the
+prune takes more than 1 hour, the backup at Monday would be skipped.
+
 
 ## Env vars
 
 * RESTIC_REPOSITORY (required): repository to backup to
 * RESTIC_PASSWORD (required): password to encrypt the backups
+* RESTIC_PRUNE_TIMEOUT (optional): Timeout for the "prune" command, e.g. 1d2h3m4s or 24h
 * BACKUP_HOSTNAME (required): A hostname to use for backups
 * BACKUP_CONFIG (optional): path to a yaml file containing advanced backup options
 * restic specific env vars (optional): e.g. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
