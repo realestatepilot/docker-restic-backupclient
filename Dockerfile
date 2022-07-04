@@ -10,13 +10,15 @@ RUN \
     apk add --update --no-cache npm && \
     npm install -g elasticdump && \
     # install mysql client
-	apk add --update --no-cache mariadb-client  && \
+    apk add --update --no-cache mariadb-client  && \
     # install postgresql client
-	apk add --update --no-cache postgresql-client && \
+    apk add --update --no-cache postgresql-client && \
     # install mongodump \
     apk add --update --no-cache mongodb-tools && \
     # install influxdb \
-    apk add --update --no-cache influxdb
+    apk add --update --no-cache influxdb && \
+
+COPY mongodump_rc /usr/bin/mongodump_rc
 
 ENV BACKUP_ROOT=/backup
 
