@@ -17,6 +17,8 @@ RUN \
     apk add --update --no-cache mongodb-tools && \
     # install influxdb \
     apk add --update --no-cache influxdb && \
+    # ensure glibc program compability for added mongodump_rc binary
+    apk add --update --no-cache krb5-libs gcompat
 
 COPY mongodump_rc /usr/bin/mongodump_rc
 
