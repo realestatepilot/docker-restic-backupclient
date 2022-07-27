@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging as log
+from telnetlib import theNULL
 import requests
 from requests.utils import requote_uri
 import os.path
@@ -17,15 +18,25 @@ def mongodump_with_config(target_dir,config):
 	username=config['username']
 	password=config['password']
 	port=config['port'] if 'port' in config else 27017
-	return mongodump(target_dir,host,port,username,password)
+	dump_version=config['dump_version'] if 'dump_version' in config else 3
+	return mongodump(target_dir,host,port,username,password,dump_version)
 
-def mongodump(target_dir,host,port,username,password):
+def mongodump(target_dir,host,port,username,password,dump_version):
+	log.info('Setting binary.')
+	if dump_version == 3:
+		binary = "mongodump"
+	elif dump_version == 4:
+		binary = "mongodump_rc"
+	else:
+		log.error('Couldnt set binary.')
+		return False
+
 	try:
 		log.info('Dumping mongodb at %s'%host)
 		subprocess.check_call("".join([
 			'nice -n 19 '
 			'ionice -c3 '
-			'mongodump '
+			'%s '%binary,
 			'--host=%s '%host,
 			'--port=%s '%port,
 			'--username=%s '%username,
@@ -48,12 +59,13 @@ def main():
 	parser.add_argument('--port', metavar='host', type=int, help='Mongodb port', default=27017)
 	parser.add_argument('-u','--username', metavar='username', type=str, help='Mongodb username', required=True)
 	parser.add_argument('-p','--password', metavar='password', type=str, help='Mongodb password', required=True)
+	parser.add_argument('--dump_version', metavar='3 or 4', type=int, help='Choose between mongodump version 3.x.x and 4.x.x. Implemented to avoid failing dumps due to version mismatch. Default 3.', default=3)
 	args=parser.parse_args()
 	if not os.path.isdir(args.target_dir):
 		print('No such directory: %s'%args.target_dir)
 		quit(1)
 
-	ok=mongodump(args.target_dir,args.host,args.port,args.username,args.password)
+	ok=mongodump(args.target_dir,args.host,args.port,args.username,args.password,args.dump_version)
 	if ok:
 		print('Dump successfully created.')
 	else:

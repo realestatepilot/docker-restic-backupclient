@@ -1,3 +1,5 @@
+FROM mongo:4.4.15 AS mongo
+
 FROM alpine:3.14
 
 RUN \
@@ -20,7 +22,8 @@ RUN \
     # ensure glibc program compability for added mongodump_rc binary
     apk add --update --no-cache krb5-libs gcompat
 
-COPY mongodump_rc /usr/bin/mongodump_rc
+WORKDIR /usr/bin/
+COPY --from=mongo /usr/bin/mongodump ./mongodump_rc
 
 ENV BACKUP_ROOT=/backup
 
