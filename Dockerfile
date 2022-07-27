@@ -24,6 +24,7 @@ RUN \
 
 WORKDIR /usr/bin/
 COPY --from=mongo /usr/bin/mongodump ./mongodump_rc
+RUN chown root:root /usr/bin/mongodump_rc
 
 ENV BACKUP_ROOT=/backup
 
