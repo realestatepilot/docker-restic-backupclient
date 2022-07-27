@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging as log
-from telnetlib import theNULL
 import requests
 from requests.utils import requote_uri
 import os.path
