@@ -148,10 +148,12 @@ pgdump:
 # * host is required
 # * port defaults to 27017
 # * username and password are required
+# * dump_version defaults to 3. Choose between mongodump version 3.x.x and 4.x.x. Implemented to avoid failing dumps due to version mismatch.
 mongodump:
   host: mongodb.local
   username: root
   password: s3cr3t
+  dump_version: 4
 
 # Perform a dump of influxdb
 # * host is required
