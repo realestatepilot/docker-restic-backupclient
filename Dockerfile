@@ -13,6 +13,8 @@ RUN \
     npm install -g elasticdump && \
     # install mysql client
     apk add --update --no-cache mariadb-client  && \
+    # with modern authentication method
+    apk add --update --no-cache mariadb-connector-c && \
     # install postgresql client
     apk add --update --no-cache postgresql-client && \
     # install mongodump \
