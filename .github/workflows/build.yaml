@@ -23,9 +23,9 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
-          images: evermind/restic-backupclient
+          images: ${{ env.REGISTRY }}/restic-backupclient
 
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
