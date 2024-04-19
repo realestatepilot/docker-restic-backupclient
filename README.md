@@ -11,9 +11,13 @@
 * dump mysql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump postgresql prior to run a backup (with option to include/exclude databases via regular expressions)
 * dump mongodb prior to run a backup
-* dump influxdb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 * support restic cache-dir in advanced config
+
+### Removed features
+
+* dump of influxdb was removed because influxdb is not part of alpine linux anymore
+
 
 ## Volumes
 
@@ -25,7 +29,6 @@
 * Mysqldump will write to /backup/mysqldump. This folder is deleted and re-created before each backup run
 * Pgdump will write to /backup/pgdump. This folder is deleted and re-created before each backup run
 * Mongodump will write to /backup/mongodump. This folder is deleted and re-created before each backup run
-* Influxdump will write to /backup/influxdump. This folder is deleted and re-created before each backup run
 
 ## Command and Arguments
 
@@ -154,13 +157,6 @@ mongodump:
   username: root
   password: s3cr3t
   dump_version: 4
-
-# Perform a dump of influxdb
-# * host is required
-# * port defaults to 8088
-# * database is optional, without all databases are dumped
-influxdump:
-  host: influxdb.local
 
 ```
 

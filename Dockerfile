@@ -1,13 +1,13 @@
 FROM mongo:4.4.15 AS mongo
 
-FROM alpine:3.14
+FROM alpine:3.19
 
 RUN \
     # install restic \
     apk add --update --no-cache restic bash restic-bash-completion curl && \
     # install python and tools \
     apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml gzip findutils && \
-    pip3 install crontab && \
+    pip3 install crontab --break-system-packages && \
     # install elasticdump \
     apk add --update --no-cache npm && \
     npm install -g elasticdump && \
@@ -19,8 +19,6 @@ RUN \
     apk add --update --no-cache postgresql-client && \
     # install mongodump \
     apk add --update --no-cache mongodb-tools && \
-    # install influxdb \
-    apk add --update --no-cache influxdb && \
     # ensure glibc program compability for added mongodump_rc binary
     apk add --update --no-cache krb5-libs gcompat
 
