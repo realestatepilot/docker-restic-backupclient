@@ -15,7 +15,6 @@ import elasticdump
 import mysqldump
 import pgdump
 import mongodump
-import influxdump
 
 def fail(msg,args):
 	log.error(msg,args)
@@ -206,22 +205,6 @@ def run_backup(prune=False):
 		mongodump_ok=mongodump.mongodump_with_config(mongodump_dir,config['mongodump'])
 		if not mongodump_ok:
 			log.error('Mongodump failed. Backup canceled.')
-			return False
-
-	if 'influxdump' in config:
-		influxdump_dir=os.path.join(backup_root,'influxdump')
-		try:
-			shutil.rmtree(influxdump_dir)
-		except:
-			pass
-		if os.path.exists(influxdump_dir):
-			log.error('Unable to delete old influxdump dir at %s'%influxdump_dir)
-		os.mkdir(influxdump_dir)
-
-		log.info('Running influxdump to %s'%influxdump_dir)
-		influxdump_ok=influxdump.influxdump_with_config(influxdump_dir,config['influxdump'])
-		if not influxdump_ok:
-			log.error('Influxdump failed. Backup canceled.')
 			return False
 
 	cmd=[
