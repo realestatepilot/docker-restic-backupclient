@@ -4,7 +4,7 @@ FROM alpine:3.19
 
 RUN \
     # install restic \
-    apk add --update --no-cache restic bash restic-bash-completion curl && \
+    apk add --update --no-cache tini restic bash restic-bash-completion curl && \
     # install python and tools \
     apk add --update --no-cache tzdata python3 py3-pip py3-requests py3-yaml gzip findutils && \
     pip3 install crontab --break-system-packages && \
@@ -32,4 +32,5 @@ VOLUME /backup
 
 ADD *.py /scripts/
 
+ENTRYPOINT ["/sbin/tini","--"]
 CMD /scripts/backup_client.py schedule @daily
