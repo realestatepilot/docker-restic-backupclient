@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
 import logging as log
-import requests
-from requests.utils import requote_uri
 import os.path
 import subprocess
 
 def mongodump_with_config(target_dir,config):
-	if not 'host' in config:
+	if 'host' not in config:
 		log.error('Missing mongodump config: host')
-	if not 'username' in config:
+	if 'username' not in config:
 		log.error('Missing mongodump config: username')
-	if not 'password' in config:
+	if 'password' not in config:
 		log.error('Missing mongodump config: password')
 	host=config['host']
 	username=config['username']
@@ -32,7 +30,7 @@ def mongodump(target_dir,host,port,username,password,dump_version):
 
 	try:
 		log.info('Dumping mongodb at %s'%host)
-		subprocess.check_call("".join([
+		subprocess.run("".join([
 			'nice -n 19 '
 			'ionice -c3 '
 			'%s '%binary,
@@ -42,8 +40,8 @@ def mongodump(target_dir,host,port,username,password,dump_version):
 			'--password=%s '%password,
 			'--forceTableScan ',
 			'-o %s '%target_dir
-			]),shell=True)
-	except subprocess.CalledProcessError as e:
+		]),shell=True,check=True)
+	except subprocess.CalledProcessError:
 		log.error('Mongodump failed.')
 		return False
 	return True

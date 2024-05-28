@@ -2,7 +2,6 @@
 
 import logging as log
 import requests
-from requests.utils import requote_uri
 import os.path
 import subprocess
 import urllib
@@ -23,7 +22,7 @@ def es_list_indices(url,username,password):
 	return result
 
 def es_dump_with_config(target_dir,config):
-	if not 'url' in config:
+	if 'url' not in config:
 		log.error('Missing elasticdump config: url')
 	url=config['url']
 	username=config['username'] if 'username' in config else None
@@ -71,13 +70,13 @@ def es_dump(target_dir,url,username,password,include_patterns,exclude_patterns):
 		try:
 			for datatype in ['alias','mapping','data']:
 				log.info('Elasticsearch: Dumping %s for %s'%(datatype,index))
-				subprocess.check_call([
+				subprocess.run([
 					'elasticdump',
 					'--input','%s/%s'%(url,index),
 					'--type',datatype,
 					'--output',os.path.join(target_dir,'%s__%s.json'%(index,datatype))
-					])
-		except subprocess.CalledProcessError as e:
+				], check=True)
+		except subprocess.CalledProcessError:
 			log.error('Elasticsearch dump failed.')
 			return False
 	return True

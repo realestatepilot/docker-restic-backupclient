@@ -11,15 +11,15 @@ def pg_list_database(host,port,username,password):
 
 	try:
 		log.info('Getting list of databases')
-		output=subprocess.check_output([" ".join([
+		output=subprocess.run([" ".join([
 				'/usr/bin/psql',
 				'--host=%s'%host,
 				'--port=%s'%port,
 				'--username=%s'%username,
 				'-P pager=off -P tuples_only=on -l',
 				"| cut -d'|' -f1 | tr -d '[:blank:]'"
-			])],env={'PGPASSWORD': password},shell=True).decode()
-	except subprocess.CalledProcessError as e:
+		])],env={'PGPASSWORD': password},shell=True,check=True).decode()
+	except subprocess.CalledProcessError:
 		log.error('Listing of databases failed.')
 		return None
 
@@ -83,7 +83,7 @@ def pg_dump(target_dir,host,port,username,password,include_patterns,exclude_patt
 				log.info('Postgresql: database %s is not excluded for this dump.'%database)
 		try:
 			log.info('Postgresql: Dumping %s'%(database))
-			subprocess.check_call(" ".join([
+			subprocess.run(" ".join([
 				'nice -n 19 '
 				'ionice -c3 '
 				'/usr/bin/pg_dump',
@@ -93,8 +93,8 @@ def pg_dump(target_dir,host,port,username,password,include_patterns,exclude_patt
 				'--user=%s '%username,
 				database,
 				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'PGSQL_%s.sql.gz'%(database))
-				]),env={'PGPASSWORD': password},shell=True)
-		except subprocess.CalledProcessError as e:
+			]),env={'PGPASSWORD': password},shell=True,check=True)
+		except subprocess.CalledProcessError:
 			log.error('Pgdump failed.')
 			return False
 	return True
