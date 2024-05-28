@@ -112,7 +112,7 @@ def init_restic_repo():
 		subprocess.check_output([
 			'restic',
 			'init'
-			],stderr=subprocess.STDOUT)
+		],stderr=subprocess.STDOUT)
 		log.info('Repository initialized.')
 	except subprocess.CalledProcessError as e:
 		output=e.output.decode()
