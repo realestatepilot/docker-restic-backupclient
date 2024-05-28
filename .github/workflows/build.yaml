@@ -5,8 +5,7 @@ on:
     tags:
       - '**'
     branches:
-      - master
-      - bugfix/memoryleak
+      - "*"
 
 env:
   REGISTRY: ghcr.io
