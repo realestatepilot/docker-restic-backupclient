@@ -232,7 +232,7 @@ def run_backup(prune=False):
     # dont use restic caching
 	if ('no-cache' in config ):
 		log.info("not using cache")
-		cmd.append(f'--no-cache={config['no-cache']}')
+		cmd.append(f"--no-cache={config['no-cache']}")
 
 	# include files to backupset from given files
 	if 'include-from' in config:
