@@ -229,11 +229,6 @@ def run_backup(prune=False):
 		cmd.append('--cache-dir')
 		cmd.append(config['cache-dir'])
 
-    # dont use restic caching
-	if ('no-cache' in config ):
-		log.info("not using cache")
-		cmd.append(f"--no-cache={config['no-cache']}")
-
 	# include files to backupset from given files
 	if 'include-from' in config:
 		includes=config['include-from']
