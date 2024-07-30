@@ -11,7 +11,7 @@ def pg_list_database(host,port,username,password):
 
 	try:
 		log.info('Getting list of databases')
-		output=subprocess.run([" ".join([
+		output=subprocess.check_output([" ".join([
 				'/usr/bin/psql',
 				'--host=%s'%host,
 				'--port=%s'%port,
