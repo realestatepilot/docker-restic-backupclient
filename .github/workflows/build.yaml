@@ -15,8 +15,6 @@ jobs:
   build:
     name: build and push
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -41,8 +39,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-
-      - name: Release Helm Chart
-        uses: helm/chart-releaser-action@v1.6.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
