@@ -1,0 +1,13 @@
+{{ if .Values.scripts }}
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "restic.fullname" . }}-scripts
+data: 
+  {{- range $key, $script := .Values.scripts }}
+  {{ $key }}: {{ toYaml $script  | indent 2 }}  
+  {{- end}}
+
+{{end}}

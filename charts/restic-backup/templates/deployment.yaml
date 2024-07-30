@@ -1,0 +1,208 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "restic.fullname" . }}
+  labels:
+    {{- include "restic.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      {{- include "restic.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "restic.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "restic.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-backup
+          image: "{{- .Values.backup.image.registry }}/{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.backup.image.pullPolicy | default "IfNotPresent" }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          command: 
+            - /scripts/backup_client.py
+            - schedule
+{{ toYaml (required "schedules are required" .Values.schedules) | indent 12 }}
+          env:
+            # soll OOM bei großen Repos verhindern https://github.com/restic/restic/issues/2519#issuecomment-566243464
+            - name: GOGC
+              value: "20"
+            - name: TZ
+              value: Europe/Berlin
+            - name: RESTIC_REPOSITORY
+              value: {{ include "restic.repositoryUrl" . }}
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "restic.fullname" . }}-secret
+                  key: RESTIC_PASSWORD
+            # mandatory until https://github.com/evermind/docker-restic-backupclient/issues/10 is solved
+            - name: RESTIC_PRUNE_TIMEOUT
+              value: {{ required "resticPruneTimeout is required" .Values.resticPruneTimeout }}              
+            {{- if .Values.cacheDir }}
+            - name: RESTIC_CACHE_DIR
+              value: /restic-cache
+            {{- end }}
+            - name: BACKUP_HOSTNAME
+              value: {{ .Release.Name }}-backup
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "restic.fullname" . }}-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "restic.fullname" . }}-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: BACKUP_CONFIG
+              value: /config/backup.yaml
+          volumeMounts:
+            - name: backup
+              mountPath: /backup
+            - name: backup-config
+              mountPath: /config
+            {{- if .Values.scripts }}            
+            - name: customscripts
+              mountPath: /customscripts
+            {{- end }}
+  {{- $root := . -}}
+  {{- range $i,$k := .Values.volumes }}
+            - name: backup-vol-{{ $i }}
+              mountPath: /backup/{{ tpl $k.name $root }}
+              readOnly: true
+  {{- end }}
+  {{- if .Values.restore }}
+            - name: restore
+              mountPath: /restore
+  {{- end }}
+  {{- if .Values.cacheDir }}
+            - name: cachedir
+              mountPath: /restic-cache
+  {{ end }}
+          securityContext:
+              {{- toYaml .Values.securityContext | nindent 12 }}
+
+        - name: {{ .Chart.Name }}-monitor
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.monitor.image.repository }}:{{ required "required monitor.image.tag" .Values.monitor.image.tag }}
+          imagePullPolicy: {{ .Values.monitor.image.pullPolicy }}
+          env:
+            - name: AWS_REGION
+              value: {{ .Values.s3.region }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "restic.fullname" . }}-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "restic.fullname" . }}-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: S3_URL
+              value: {{ required "s3.url" .Values.s3.url }}
+            - name: BUCKET_NAMES
+              value: {{ .Values.s3.bucketName }}
+
+          ports:
+            - name: http
+              containerPort: {{.Values.monitor.service.port}}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 10
+            periodSeconds: 300
+            httpGet:
+              path: /metrics
+              port: http
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 60
+            httpGet:
+              path: /metrics
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+        - name: backup
+          emptyDir: {}
+        - name: backup-config
+          secret:
+{{- if .Values.configmap }}
+            secretName: "{{ tpl .Values.configmap . }}"
+{{- else }}
+            secretName: {{ include "restic.fullname" . }}-config
+{{- end }}
+{{- if .Values.scripts }}
+        - name: customscripts
+          configMap:
+            name: {{ include "restic.fullname" . }}-scripts
+{{- end }}
+{{- range $i,$k := .Values.volumes }}
+        - name: backup-vol-{{ $i }}
+          {{- if $k.hostPath }}
+          hostPath:
+            path: "{{ tpl $k.hostPath $root }}"
+          {{- end}}
+          {{- if $k.persistentVolumeClaim }}
+          persistentVolumeClaim:
+            claimName: {{$k.persistentVolumeClaim.claimName}}
+          {{- end }}
+{{- end }}
+
+{{- if .Values.restore }}
+{{- if .Values.restore.hostPath -}} # Lösung für Rückwärtskompatibilität, als es nur hostPath gab
+        - name: restore
+          hostPath:
+            path: {{ .Values.restore.hostPath }}
+{{- else }}
+        - name: restore
+          {{- toYaml .Values.restore | nindent 10 }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.cacheDir }}
+{{- if .Values.cacheDir.hostPath }}
+        - name: cachedir
+          hostPath:
+            path: {{ .Values.cacheDir.hostPath }}
+{{- else }}
+        - name: cachedir
+          {{- toYaml .Values.cacheDir | nindent 10 }}
+
+{{- end }}
+{{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

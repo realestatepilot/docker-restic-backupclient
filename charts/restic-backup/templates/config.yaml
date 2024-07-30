@@ -1,0 +1,13 @@
+{{ if not .Values.configmap }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "restic.fullname" . }}-config
+data:
+  backup.yaml: |-
+  {{- if .Values.config }}
+  {{- toYaml .Values.config | b64enc | nindent 4 }}
+  {{- else }}
+  {{- toYaml .Values.defaultConfig | b64enc | nindent 4 }}
+  {{- end }}
+{{- end }}
