@@ -9,6 +9,7 @@ import time
 import subprocess
 import os.path
 import re
+import gc
 import yaml
 import shutil
 import elasticdump
@@ -21,7 +22,6 @@ def fail(msg,args):
 	quit(1)
 
 def resolve_env_placeholders(template):
-	origTemplate = template
 	resolveDepth = 0
 	while resolveDepth < 10:
 		resolveDepth += 1
@@ -86,7 +86,7 @@ def run_pre_backup_script(scriptinfo):
 	if type(scriptinfo) is not dict:
 		log.error("Expected pre-backup-script to be a dict, got: %s",type(scriptinfo).__name__)
 		return False
-	if not 'script' in scriptinfo:
+	if 'script' not in scriptinfo:
 		log.error("Pre-backup-script does not contain a 'script' property.")
 		return False
 
@@ -96,7 +96,7 @@ def run_pre_backup_script(scriptinfo):
 
 	log.info(description)
 	try:
-		subprocess.check_call(script,stderr=subprocess.STDOUT,shell=True)
+		subprocess.run(script,stderr=subprocess.STDOUT,shell=True,check=True)
 		log.info("Pre-backup-script succeeded")
 	except subprocess.CalledProcessError as e:
 		if (fail_on_error):
@@ -112,7 +112,7 @@ def init_restic_repo():
 		subprocess.check_output([
 			'restic',
 			'init'
-			],stderr=subprocess.STDOUT)
+		],stderr=subprocess.STDOUT)
 		log.info('Repository initialized.')
 	except subprocess.CalledProcessError as e:
 		output=e.output.decode()
@@ -127,7 +127,7 @@ def run_backup(prune=False):
 	init_restic_repo()
 
 	log.info('Unlocking repository')
-	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
+	subprocess.run(['restic','unlock'],stderr=subprocess.STDOUT,check=True)
 
 	config=load_config()
 	if config is None:
@@ -255,19 +255,19 @@ def run_backup(prune=False):
 
 	log.info('Starting backup')
 	try:
-		subprocess.check_call(cmd,stderr=subprocess.STDOUT)
+		subprocess.run(cmd,stderr=subprocess.STDOUT,check=True)
 		
 		log.info('Backup finished.')
-	except subprocess.CalledProcessError as e:
-			log.info('Backup failed.')
-			return False
+	except subprocess.CalledProcessError:
+		log.info('Backup failed.')
+		return False
 
 	if not clean_old_backups(config):
 		return False
 
 	if prune:
 		return prune_repository()
-	
+
 	return True
 
 def clean_old_backups(config=None):
@@ -307,12 +307,12 @@ def clean_old_backups(config=None):
 			return
 
 	log.info('Unlocking repository')
-	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
+	subprocess.run(['restic','unlock'],stderr=subprocess.STDOUT,check=True)
 	log.info('Deleting old backups')
 	try:
-		subprocess.check_call(cleanup_command,stderr=subprocess.STDOUT)
+		subprocess.run(cleanup_command,stderr=subprocess.STDOUT,check=True)
 		log.info('Cleanup finished.')
-	except subprocess.CalledProcessError as e:
+	except subprocess.CalledProcessError:
 		log.warning('Cleanup failed!')
 		return False
 
@@ -321,7 +321,7 @@ def clean_old_backups(config=None):
 def get_prune_timeout():
 	prune_timeout=get_env('RESTIC_PRUNE_TIMEOUT',UNDEFINED)
 	if (prune_timeout is None):
-		return none
+		return None
 
 	# https://stackoverflow.com/a/4628148/1471588
 	regex = re.compile(r'^((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?$')
@@ -347,17 +347,17 @@ def prune_repository(config=None):
 
 	if config is None:
 		return False
-  
+
 	prune_timeout=get_prune_timeout()
 
 	prune_command=[
 		'restic',
 		'prune',
-		'-o','s3.list-objects-v1=true' # See https://github.com/restic/restic/issues/3761
+		'-o','s3.list-objects-v1=true'  # See https://github.com/restic/restic/issues/3761
 	]
 
 	log.info('Unlocking repository')
-	subprocess.check_call(['restic','unlock'],stderr=subprocess.STDOUT)
+	subprocess.run(['restic','unlock'],stderr=subprocess.STDOUT,check=True)
 
 	if prune_timeout is None:
 		log.info('Pruning repository')
@@ -365,12 +365,12 @@ def prune_repository(config=None):
 		log.info('Pruning repository (timeout %s)'%get_env('RESTIC_PRUNE_TIMEOUT'))
 		prune_command=['timeout',str(prune_timeout.total_seconds())] + prune_command
 	try:
-		subprocess.check_call(prune_command,stderr=subprocess.STDOUT)
+		subprocess.run(prune_command,stderr=subprocess.STDOUT,check=True)
 		log.info('Prune finished.')
-	except subprocess.CalledProcessError as e:
+	except subprocess.CalledProcessError:
 		log.warning('Prune failed!')
 		return False
-	
+
 	return True
 
 
@@ -402,6 +402,9 @@ def schedule_backup(crontab,prunecron=None):
 				run_backup(prunecron is None)
 		except:
 			log.exception("Something went unexpectedly wrong!")
+		finally:
+			gc.collect()
+
 
 def main():
 	log.basicConfig(level=log.INFO,format='%(asctime)s %(levelname)7s: %(message)s')
