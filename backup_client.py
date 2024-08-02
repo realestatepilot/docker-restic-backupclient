@@ -122,12 +122,13 @@ def init_restic_repo():
 			log.error('Initializing repository failed: %s'%output)
 			return False
 
-def run_backup(prune=False):
+def run_backup(prune=False, dump_only=False):
 	backup_root=get_env('BACKUP_ROOT')
-	init_restic_repo()
 
-	log.info('Unlocking repository')
-	subprocess.run(['restic','unlock'],stderr=subprocess.STDOUT,check=True)
+	if not dump_only:
+		init_restic_repo()
+		log.info("Unlocking repository")
+		subprocess.check_call(["restic", "unlock"], stderr=subprocess.STDOUT)
 
 	config=load_config()
 	if config is None:
@@ -206,6 +207,9 @@ def run_backup(prune=False):
 		if not mongodump_ok:
 			log.error('Mongodump failed. Backup canceled.')
 			return False
+
+	if dump_only:
+		return True
 
 	cmd=[
 		'nice','-n19',
@@ -374,7 +378,7 @@ def prune_repository(config=None):
 	return True
 
 
-def schedule_backup(crontab,prunecron=None):
+def schedule_backup(crontab, prunecron=None, dump_only=False):
 	next_is_prune=False
 	while True:
 		next_schedule=get_next_schedule(crontab)
@@ -399,7 +403,7 @@ def schedule_backup(crontab,prunecron=None):
 			if next_is_prune:
 				prune_repository()
 			else:
-				run_backup(prunecron is None)
+				run_backup(prunecron is None, dump_only)
 		except:
 			log.exception("Something went unexpectedly wrong!")
 		finally:
@@ -412,11 +416,17 @@ def main():
 	subparsers = parser.add_subparsers(help='sub-command help',dest='cmd')
 	subparsers.required = True
 	parser_run = subparsers.add_parser('run', help='Run a backup now and rotate+prune afterwards.')
+	parser_run.add_argument(
+		"--dump-only", action="store_true", help="Dump target in config without restic."
+	)
 	parser_run = subparsers.add_parser('rotate', help='Rotate backups now.')
 	parser_run = subparsers.add_parser('prune', help='Prune the repository now')
 	parser_schedule = subparsers.add_parser('schedule', help='Schedule backups.')
 	parser_schedule.add_argument('--prune',dest='prunecron',action=ParseCronExpressions,
 		help='Time to prune the backup (cron expression, see https://pypi.org/project/crontab/)')
+	parser_schedule.add_argument(
+		"--dump-only", action="store_true", help="Dump target in config without restic."
+	)
 	parser_schedule.add_argument('cronexpression',nargs='+',action=ParseCronExpressions,
 		help='Time to schedule the backup (cron expression, see https://pypi.org/project/crontab/)')
 
@@ -429,7 +439,7 @@ def main():
 	get_prune_timeout()
 
 	if args.cmd=='run':
-		result=run_backup(True)
+		result=run_backup(True, args.dump_only)
 		if not result:
 			quit(1)
 	elif args.cmd=='rotate':
@@ -441,7 +451,7 @@ def main():
 		if not result:
 			quit(1)
 	else:
-		schedule_backup(args.cronexpression, args.prunecron)
+		schedule_backup(args.cronexpression, args.prunecron, args.dump_only)
 
 
 if __name__ == '__main__':

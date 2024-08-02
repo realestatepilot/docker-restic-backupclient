@@ -11,13 +11,13 @@ def mysql_list_database(host,port,username,password):
 
 	try:
 		log.info('Getting list of databases')
-		output=subprocess.run([
+		output=subprocess.check_output([
 			'mysqlshow',
 			'--host=%s'%host,
 			'--port=%s'%port,
 			'--user=%s'%username
-		],env={'MYSQL_PWD': password},check=True).decode()
-	except subprocess.CalledProcessError as e:
+		],env={'MYSQL_PWD': password}).decode()
+	except subprocess.CalledProcessError:
 		log.error('Mysqlshow failed.')
 		return None
 
@@ -38,11 +38,11 @@ def mysql_list_database(host,port,username,password):
 	return result
 
 def mysql_dump_with_config(target_dir,config):
-	if not 'host' in config:
+	if 'host' not in config:
 		log.error('Missing mysql config: host')
-	if not 'username' in config:
+	if 'username' not in config:
 		log.error('Missing mysql config: username')
-	if not 'password' in config:
+	if 'password' not in config:
 		log.error('Missing mysql config: password')
 	host=config['host']
 	username=config['username']
