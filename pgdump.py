@@ -18,7 +18,7 @@ def pg_list_database(host,port,username,password):
 				'--username=%s'%username,
 				'-P pager=off -P tuples_only=on -l',
 				"| cut -d'|' -f1 | tr -d '[:blank:]'"
-		])],env={'PGPASSWORD': password},shell=True,check=True).decode()
+		])],env={'PGPASSWORD': password},shell=True).decode()
 	except subprocess.CalledProcessError:
 		log.error('Listing of databases failed.')
 		return None
