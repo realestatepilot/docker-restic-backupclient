@@ -5,7 +5,7 @@ on:
     tags:
       - '**'
     branches:
-      - master
+      - "**"
 
 env:
   REGISTRY: ghcr.io
