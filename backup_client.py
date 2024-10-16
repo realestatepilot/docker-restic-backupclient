@@ -5,6 +5,7 @@ import logging as log
 import argparse
 from crontab import CronTab
 from datetime import datetime,timedelta
+from smtp_client import SMTPClient
 import time
 import subprocess
 import os.path
@@ -125,18 +126,23 @@ def init_restic_repo():
 def run_backup(prune=False, dump_only=False):
 	backup_root=get_env('BACKUP_ROOT')
 
+	config=load_config()
+	if config is None:
+		return False
+
 	if not dump_only:
 		init_restic_repo()
 		log.info("Unlocking repository")
 		subprocess.check_call(["restic", "unlock"], stderr=subprocess.STDOUT)
 
-	config=load_config()
-	if config is None:
-		return False
-
 	if not (os.path.exists(backup_root)):
 		log.info('Backup mount point not found %s. Creating internal mount point for dump jobs. This might be ok if you only backup database dumps.'%backup_root)
 		os.mkdir(backup_root)
+
+	smtp_client = None
+
+	if "smtp" in config:
+		smtp_client = SMTPClient(config["smtp"])
 
 	if 'pre-backup-scripts' in config:
 		for script in config['pre-backup-scripts']:
@@ -264,6 +270,8 @@ def run_backup(prune=False, dump_only=False):
 		log.info('Backup finished.')
 	except subprocess.CalledProcessError:
 		log.info('Backup failed.')
+		if smtp_client is not None:
+			smtp_client.send_mail("Restic Backup failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
 		return False
 
 	if not clean_old_backups(config):
@@ -378,6 +386,21 @@ def prune_repository(config=None):
 	return True
 
 
+def notify(subject, body):
+
+	config=load_config()
+	if config is None:
+		log.error('Could not load config.')
+		return False
+	if "smtp" not in config:
+		log.error("'smtp' is missing from config - not sending mail.")
+		return False
+	smpt_client = SMTPClient(config["smtp"])
+	smpt_client.send_mail(subject, body)
+	log.info("Sent Notifaction.")
+	return True
+
+
 def schedule_backup(crontab, prunecron=None, dump_only=False):
 	next_is_prune=False
 	while True:
@@ -401,13 +424,17 @@ def schedule_backup(crontab, prunecron=None, dump_only=False):
 			time.sleep(10)
 		try:
 			if next_is_prune:
-				prune_repository()
+				res=prune_repository()
 			else:
-				run_backup(prunecron is None, dump_only)
+				res=run_backup(prunecron is None, dump_only)
 		except:
+			res=False
 			log.exception("Something went unexpectedly wrong!")
 		finally:
 			gc.collect()
+        
+		if not res:
+			notify("Restic Backup Failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
 
 
 def main():
@@ -421,6 +448,7 @@ def main():
 	)
 	parser_run = subparsers.add_parser('rotate', help='Rotate backups now.')
 	parser_run = subparsers.add_parser('prune', help='Prune the repository now')
+	parser_run = subparsers.add_parser('notify', help='Send test mail')
 	parser_schedule = subparsers.add_parser('schedule', help='Schedule backups.')
 	parser_schedule.add_argument('--prune',dest='prunecron',action=ParseCronExpressions,
 		help='Time to prune the backup (cron expression, see https://pypi.org/project/crontab/)')
@@ -441,13 +469,20 @@ def main():
 	if args.cmd=='run':
 		result=run_backup(True, args.dump_only)
 		if not result:
+			notify("Restic Backup Failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
 			quit(1)
 	elif args.cmd=='rotate':
 		result=clean_old_backups(None)
 		if not result:
+			notify("Restic Clean Failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
 			quit(1)
 	elif args.cmd=='prune':
 		result=prune_repository(None)
+		if not result:
+			notify("Restic Prune Failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
+			quit(1)
+	elif args.cmd=='notify':
+		result=notify("Restic Notification Test", f"This is a test mail sent by backup host: {get_env('BACKUP_HOSTNAME')}")
 		if not result:
 			quit(1)
 	else:
