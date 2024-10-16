@@ -19,12 +19,13 @@ exclude:
   - "*.bak"
   - ".cache/*"
 
-smtp:
-  host: smtp.host.com
-  username: user@host.com
-  password: guest
-  from: user@host@com
-  recipient: recipient@example.com
+# smtp configuration to send mails when backup fails
+# smtp:
+#   host: smtp.host.com
+#   username: user@host.com
+#   password: guest
+#   from: user@host@com
+#   recipient: recipient@example.com
 
 # define restic cache-dir
 # cache-dir: /otherCacheDir
