@@ -122,6 +122,7 @@ def init_restic_repo():
 		else:
 			log.error('Initializing repository failed: %s'%output)
 			return False
+	return True
 
 def run_backup(prune=False, dump_only=False):
 	backup_root=get_env('BACKUP_ROOT')
@@ -131,7 +132,8 @@ def run_backup(prune=False, dump_only=False):
 		return False
 
 	if not dump_only:
-		init_restic_repo()
+		if not init_restic_repo():
+			return False
 		log.info("Unlocking repository")
 		subprocess.check_call(["restic", "unlock"], stderr=subprocess.STDOUT)
 
@@ -287,7 +289,8 @@ def clean_old_backups(config=None):
 	if config is None:
 		# direct call, init first
 		config=load_config()
-		init_restic_repo()
+		if not init_restic_repo():
+			return False
 
 	if config is None:
 		return False
@@ -306,7 +309,7 @@ def clean_old_backups(config=None):
 				cleanup_command+=['--keep-%s'%keep_type,str(keep[keep_type])]
 		if not keep_is_valid:
 			log.warning('Keep configuration is invalid - not deleting old backups.')
-			return
+			return False
 	else:
 		keep_is_valid=False
 		for keep_type in ['last','hourly','daily','weekly','monthly','yearly']:
@@ -316,7 +319,7 @@ def clean_old_backups(config=None):
 				cleanup_command+=['--keep-%s'%keep_type,str(environ[keep_env])]
 		if not keep_is_valid:
 			log.warning('Rotation not configured. Keeping backups forever.')
-			return
+			return False
 
 	log.info('Unlocking repository')
 	subprocess.run(['restic','unlock'],stderr=subprocess.STDOUT,check=True)
@@ -355,7 +358,8 @@ def prune_repository(config=None):
 	if config is None:
 		# direct call, init first
 		config=load_config()
-		init_restic_repo()
+		if not init_restic_repo():
+			return False
 
 	if config is None:
 		return False
