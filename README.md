@@ -37,6 +37,7 @@
   * `run` - runs a backup immediatelly, rotate and prune afterwards
   * `rotate` - rotate a backup immediatelly
   * `prune` - prune the repository immediatelly
+  * `notify` - send test notification based on smtp configuration
   * `schedule` - runs periodic backups. One or more cron expressions are required as further arguments (see https://pypi.org/project/crontab/)
     * `--prune` - An optional cron expressions for pruning the repo. If set, pruning is scheduled separately and not ather the backup.
       If a backup is running when the prune is scheduled, prune will be skipped and vice
@@ -96,6 +97,14 @@ include-from:
 # define restic cache-dir
 # dir has to match with container environment if used
 # cache-dir: /restic-cache
+
+# smtp configuration to send mails when backup fails
+smtp:
+  host: smtp.host.com
+  username: user@host.com
+  password: guest
+  from: user@host@com
+  recipient: recipient@example.com
 
 # Run some script(s) before backup
 pre-backup-scripts:

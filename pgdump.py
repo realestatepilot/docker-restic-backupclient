@@ -55,7 +55,7 @@ def pg_dump(target_dir,host,port,username,password,include_patterns,exclude_patt
 	if include_patterns and exclude_patterns:
 		log.error("Either inclusion or exclusion of indices is allowed, not both!")
 	databases=pg_list_database(host,port,username,password)
-	if databases is None:
+	if not databases:
 		return False
 
 	for database in databases:
