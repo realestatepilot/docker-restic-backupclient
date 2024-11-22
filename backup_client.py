@@ -274,6 +274,8 @@ def run_backup(prune=False, dump_only=False):
 		# some files could not be found
 		if proc.returncode == 3:
 			log.info("Backup finished with warnings.")
+			if smtp_client is not None:
+				smtp_client.send_mail("Restic Backup warning", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
 		# failed
 		else:
 			log.info('Backup failed.')
