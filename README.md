@@ -13,6 +13,7 @@
 * dump mongodb prior to run a backup
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 * support restic cache-dir in advanced config
+* send mail on error
 
 ### Removed features
 
