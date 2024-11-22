@@ -268,7 +268,7 @@ def run_backup(prune=False, dump_only=False):
 	log.info('Starting backup')
 	try:
 		proc = subprocess.run(cmd,stderr=subprocess.STDOUT,check=True)
-		
+		assert proc.returncode == 0
 		log.info('Backup finished.')
 	except subprocess.CalledProcessError:
 		# some files could not be found
