@@ -267,14 +267,19 @@ def run_backup(prune=False, dump_only=False):
 
 	log.info('Starting backup')
 	try:
-		subprocess.run(cmd,stderr=subprocess.STDOUT,check=True)
+		proc = subprocess.run(cmd,stderr=subprocess.STDOUT,check=True)
 		
 		log.info('Backup finished.')
 	except subprocess.CalledProcessError:
-		log.info('Backup failed.')
-		if smtp_client is not None:
-			smtp_client.send_mail("Restic Backup failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
-		return False
+		# some files could not be found
+		if proc.returncode == 3:
+			log.info("Backup finished with warnings.")
+		# failed
+		else:
+			log.info('Backup failed.')
+			if smtp_client is not None:
+				smtp_client.send_mail("Restic Backup failed", f"Backup Host: {get_env('BACKUP_HOSTNAME')}")
+			return False
 
 	if not clean_old_backups(config):
 		return False
