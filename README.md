@@ -14,6 +14,7 @@
 * Excluding caches from being backed up. See http://bford.info/cachedir/spec.html on how to mark a cache dir
 * support restic cache-dir in advanced config
 * send mail on error
+* send mail on warning (restic exit 3)
 
 ### Removed features
 
