@@ -50,7 +50,7 @@ def mysql_dump_with_config(target_dir,config):
 	port=config['port'] if 'port' in config else 3306
 	include_patterns=config['include'] if 'include' in config else None
 	exclude_patterns=config['exclude'] if 'exclude' in config else None
-	mysqldump_extra_args=config['mysqldump-extra-args'] if 'mysqldump_extra_args' in config else []
+	mysqldump_extra_args=config['mysqldump-extra-args'] if 'mysqldump-extra-args' in config else []
 	return mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns,mysqldump_extra_args)
 
 def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_patterns,mysqldump_extra_args):
