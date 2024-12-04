@@ -96,7 +96,7 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--add-drop-database ',
 				'--no-create-info ',
 				' '.join(mysqldump_extra_args),
-				'--databases %s '%database,
+				' --databases %s '%database,
 				' | nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DROP_CREATE.sql.gz'%(database))
 			]),env={'MYSQL_PWD': password},shell=True,check=True)
 			log.info('Mysql: Dumping DATA for %s'%(database))
@@ -109,7 +109,8 @@ def mysql_dump(target_dir,host,port,username,password,include_patterns,exclude_p
 				'--user=%s '%username,
 				'--no-create-db ',
 				' '.join(mysqldump_extra_args),
-				database,
+				' ',
+                database,
 				'| nice -n 19 gzip --best --rsyncable > %s '%os.path.join(target_dir,'MYSQL_%s_DATA.sql.gz'%(database))
 			]),env={'MYSQL_PWD': password},shell=True,check=True)
 		except subprocess.CalledProcessError as e:
