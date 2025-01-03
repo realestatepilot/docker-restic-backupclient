@@ -1,6 +1,6 @@
 FROM mongo:4.4.15 AS mongo
 
-FROM alpine:3.19
+FROM alpine:3.21
 
 RUN \
     # install restic \
@@ -16,7 +16,7 @@ RUN \
     # with modern authentication method
     apk add --update --no-cache mariadb-connector-c && \
     # install postgresql client
-    apk add --update --no-cache postgresql-client && \
+    apk add --update --no-cache postgresql17-client && \
     # install mongodump \
     apk add --update --no-cache mongodb-tools && \
     # ensure glibc program compability for added mongodump_rc binary
