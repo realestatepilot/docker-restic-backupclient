@@ -1,4 +1,6 @@
 
+import email.utils as utils
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from smtplib import SMTP_SSL
@@ -35,6 +37,8 @@ class SMTPClient:
         message["From"] = self.mail_from
         message["To"] = self.mail_recipient
         message["Subject"] = subject
+        message["msg-id"] = utils.make_msgid(domain=self.smtp_host)
+        message["Date"] = utils.formatdate(localtime=True)
 
         message.attach(MIMEText(body, "plain"))
 
