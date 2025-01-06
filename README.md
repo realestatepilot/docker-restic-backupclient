@@ -70,7 +70,7 @@ Env vars may contain placeholders like `$(OTHER_ENV_VAR)` which will be resolved
 
 ## Yaml configuration examples
 
-```
+```yaml
 ---
 
 # if set, old backups will be deleted according to the rules below.

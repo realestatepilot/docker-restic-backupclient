@@ -22,6 +22,7 @@ mysql -u root -pguest testdb < test/data/artists-mariadb.sql
 EXPECTED=$(mysql -u root -pguest -e "SELECT COUNT(*) FROM testdb.artist;" -s -N)
 
 # restic setup
+rm -rf backup
 mkdir backup
 export RESTIC_REPOSITORY=restic_repo
 export RESTIC_PASSWORD=guest
