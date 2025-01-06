@@ -16,7 +16,7 @@ sudo mysql -e "FLUSH PRIVILEGES;"
 
 # ingest data
 mysql -u root -pguest -e "CREATE DATABASE IF NOT EXISTS testdb;"
-mysql -u root -pguest testdb < test/data/artists.sql
+mysql -u root -pguest testdb < test/data/artists-mariadb.sql
 
 # number of expected entries in restored table
 EXPECTED=$(mysql -u root -pguest -e "SELECT COUNT(*) FROM testdb.artist;" -s -N)
