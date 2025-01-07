@@ -13,7 +13,7 @@ env:
 
 jobs:
   test-mariadb:
-    name: build and push
+    name: MariaDB Integrationtest
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -25,7 +25,7 @@ jobs:
           test/test_mariadb.sh
 
   test-postgres17:
-    name: build and push
+    name: Postgres17 Integrationtest
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
