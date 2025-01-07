@@ -12,7 +12,7 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/restic-backupclient
 
 jobs:
-  build:
+  test-mariadb:
     name: build and push
     runs-on: ubuntu-latest
     steps:
@@ -24,10 +24,27 @@ jobs:
           chmod +x test/test_mariadb.sh
           test/test_mariadb.sh
 
-      - name: Run Postgres Test
+  test-postgres17:
+    name: build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Run Postgres17 Test
         run: |
           chmod +x test/test_postgres.sh
           test/test_postgres.sh
+
+  build:
+    name: build and push
+    runs-on: ubuntu-latest
+    needs: 
+      - test-mariadb
+      - test-postgres17
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
