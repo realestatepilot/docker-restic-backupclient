@@ -52,10 +52,9 @@ echo "guest" > restic_password
 rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
 
-find .
-
 # extract restore
 gunzip -c restore/backup/pgdump/PGSQL_testdb.sql.gz > testdb.sql
+cat testdb.sql
 
 # re-ingest data
 sudo -u postgres psql -d testdb -c "DROP TABLE artist;"
