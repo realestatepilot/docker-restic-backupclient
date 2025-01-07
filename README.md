@@ -171,3 +171,8 @@ mongodump:
 
 ```
 
+## Notes
+
+The Dockerfile installs Postgres 17. The `pgdump` client is backward compatible but it does not ensure that the dump may be ingested into an older version of Postgres:
+> Loading a dump file into an older server may require manual editing of 
+> the dump file to remove syntax not understood by the older server.
