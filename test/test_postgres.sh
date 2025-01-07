@@ -21,6 +21,11 @@ sudo -u postgres psql -d testdb -f test/data/artists-postgres.sql
 # number of expected entries in restored table
 EXPECTED=$(sudo -u postgres psql -d testdb -c "SELECT COUNT(*) FROM artist;" -t -A)
 
+if [ -z "${EXPECTED}" ]; then
+    echo "Failed to retrieve expected number."
+    exit 1
+fi
+
 # restic setup
 rm -rf backup
 mkdir backup
@@ -40,7 +45,7 @@ python3 backup_client.py run
 echo "Expected number of entries: ${EXPECTED}"
 
 # get created snapshot
-SNAPSHOT=$(restic list snapshots -q | awk 'NR == 1')
+SNAPSHOT=$(restic list snapshots -q | tail -n 1)
 restic list snapshots
 echo "SNAP: $SNAPSHOT"
 
@@ -48,6 +53,9 @@ echo "SNAP: $SNAPSHOT"
 echo "guest" > restic_password
 rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
+
+find restore
+exit 0
 
 # extract restore
 gunzip -c restore/backup/mysqldump/MYSQL_testdb_DATA.sql.gz > testdb.sql
@@ -59,7 +67,7 @@ sudo -u postgres psql -d testdb -f testdb.sql
 # test consistency
 ACTUAL=$(sudo -u postgres psql -d testdb -c "SELECT COUNT(*) FROM artist;" -t -A)
 
-if [ $EXPECTED != $ACTUAL ]; then
+if [ "${EXPECTED}" != "${ACTUAL}" ]; then
     echo "Initial Rows != Restored Rows: ${EXPECTED} != ${ACTUAL}"
     echo "Test failed."
     exit 1

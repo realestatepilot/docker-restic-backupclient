@@ -21,6 +21,11 @@ mysql -u root -pguest testdb < test/data/artists-mariadb.sql
 # number of expected entries in restored table
 EXPECTED=$(mysql -u root -pguest -e "SELECT COUNT(*) FROM testdb.artist;" -s -N)
 
+if [ -z "${EXPECTED}" ]; then
+    echo "Failed to retrieve expected number."
+    exit 1
+fi
+
 # restic setup
 rm -rf backup
 mkdir backup
@@ -40,7 +45,7 @@ python3 backup_client.py run
 echo "Expected number of entries: ${EXPECTED}"
 
 # get created snapshot
-SNAPSHOT=$(restic list snapshots -q | awk 'NR == 1')
+SNAPSHOT=$(restic list snapshots -q | tail -n 1)
 
 # restic reads password from file
 echo "guest" > restic_password
@@ -57,7 +62,7 @@ mysql -u root -pguest testdb < testdb.sql
 # test consistency
 ACTUAL=$(mysql -u root -pguest -e "SELECT COUNT(*) FROM testdb.artist;" -s -N)
 
-if [ $EXPECTED != $ACTUAL ]; then
+if [ "${EXPECTED}" != "${ACTUAL}" ]; then
     echo "Initial Rows != Restored Rows: ${EXPECTED} != ${ACTUAL}"
     echo "Test failed."
     exit 1
