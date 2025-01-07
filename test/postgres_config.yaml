@@ -6,3 +6,5 @@ pgdump:
   host: localhost
   username: root
   password: guest
+  exclude:
+    - template0
