@@ -46,13 +46,13 @@ echo "Expected number of entries: ${EXPECTED}"
 
 # get created snapshot
 SNAPSHOT=$(restic list snapshots -q | tail -n 1)
-restic list snapshots
-echo "SNAP: $SNAPSHOT"
 
 # restic reads password from file
 echo "guest" > restic_password
 rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
+
+find .
 
 # extract restore
 gunzip -c restore/backup/pgdump/PGSQL_testdb.sql.gz > testdb.sql
