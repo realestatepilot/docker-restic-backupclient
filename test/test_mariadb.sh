@@ -40,7 +40,7 @@ python3 backup_client.py run
 echo "Expected number of entries: ${EXPECTED}"
 
 # get created snapshot
-SNAPSHOT=$(restic list snapshots)
+SNAPSHOT=$(restic list snapshots -q | awk 'NR == 1')
 
 # restic reads password from file
 echo "guest" > restic_password
