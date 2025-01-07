@@ -54,11 +54,8 @@ echo "guest" > restic_password
 rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
 
-find restore
-exit 0
-
 # extract restore
-gunzip -c restore/backup/mysqldump/MYSQL_testdb_DATA.sql.gz > testdb.sql
+gunzip -c restore/backup/pgdump/PGSQL_testdb.sql.gz > testdb.sql
 
 # re-ingest data
 sudo -u postgres psql -d testdb -c "DROP TABLE artist;"
