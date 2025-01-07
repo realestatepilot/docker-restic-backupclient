@@ -4,7 +4,7 @@ keep:
   weekly: 8
 pgdump:
   host: localhost
-  username: root
+  username: postgres
   password: guest
   exclude:
     - template0
