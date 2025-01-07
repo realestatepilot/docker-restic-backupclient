@@ -41,25 +41,23 @@ echo "Expected number of entries: ${EXPECTED}"
 
 # get created snapshot
 SNAPSHOT=$(restic list snapshots -q | awk 'NR == 1')
+restic list snapshots
+echo "SNAP: $SNAPSHOT"
 
 # restic reads password from file
 echo "guest" > restic_password
 rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
 
-find restore
-
-exit 0
-
 # extract restore
 gunzip -c restore/backup/mysqldump/MYSQL_testdb_DATA.sql.gz > testdb.sql
 
 # re-ingest data
-mysql -u root -pguest -e "DROP TABLE testdb.artist;"
-mysql -u root -pguest testdb < testdb.sql
+sudo -u postgres psql -d testdb -c "DROP TABLE artist;"
+sudo -u postgres psql -d testdb -f testdb.sql
 
 # test consistency
-ACTUAL=$(mysql -u root -pguest -e "SELECT COUNT(*) FROM testdb.artist;" -s -N)
+ACTUAL=$(sudo -u postgres psql -d testdb -c "SELECT COUNT(*) FROM artist;" -t -A)
 
 if [ $EXPECTED != $ACTUAL ]; then
     echo "Initial Rows != Restored Rows: ${EXPECTED} != ${ACTUAL}"

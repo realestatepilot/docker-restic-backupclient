@@ -44,6 +44,7 @@ SNAPSHOT=$(restic list snapshots -q | awk 'NR == 1')
 
 # restic reads password from file
 echo "guest" > restic_password
+rm -rf restore
 restic restore ${SNAPSHOT} -p "restic_password" --target restore
 
 # extract restore
