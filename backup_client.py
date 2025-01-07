@@ -27,7 +27,7 @@ def resolve_env_placeholders(template):
 	while resolveDepth < 10:
 		resolveDepth += 1
 		changed = False
-		for placeholder, key in re.findall('(\$\(([a-zA-Z0-9_-]+)\))', template):
+		for placeholder, key in re.findall(r'(\$\(([a-zA-Z0-9_-]+)\))', template):
 			if key in environ:
 				template = template.replace(placeholder, environ[key])
 				changed = True
