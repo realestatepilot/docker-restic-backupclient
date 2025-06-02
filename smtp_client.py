@@ -1,4 +1,6 @@
 
+import email.utils as utils
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from smtplib import SMTP_SSL
@@ -31,11 +33,11 @@ class SMTPClient:
 
     def send_mail(self, subject, body):
 
-        message = MIMEMultipart()
+        message = MIMEText(body, "plain")
         message["From"] = self.mail_from
         message["To"] = self.mail_recipient
         message["Subject"] = subject
-
-        message.attach(MIMEText(body, "plain"))
+        message["message-id"] = utils.make_msgid(domain=self.smtp_host)
+        message["Date"] = utils.formatdate(localtime=True)
 
         self.smtp_client.sendmail(self.mail_from, self.mail_recipient, message.as_string())
